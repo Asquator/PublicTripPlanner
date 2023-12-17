@@ -1,7 +1,5 @@
 package rfinder.pathfinding.graph;
 
-import com.kitfox.svg.A;
-
 import java.util.*;
 
 public class RouteFinder <T extends GraphNode>{

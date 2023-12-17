@@ -3,7 +3,7 @@ package rfinder.structures.nodes;
 import rfinder.pathfinding.graph.GraphNode;
 import rfinder.structures.general.Location;
 
-public class VertexNode extends PathNode implements GraphNode<Integer> {
+public class VertexNode extends PathNode implements GraphNode {
 
     private int vertexId;
 
@@ -12,7 +12,7 @@ public class VertexNode extends PathNode implements GraphNode<Integer> {
         this.vertexId = vertexId ;
     }
 
-    public Integer getId() {
+    public int getId() {
         return vertexId;
     }
 

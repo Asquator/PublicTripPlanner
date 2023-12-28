@@ -7,8 +7,4 @@ public class WalkSegment extends PathSegment{
         super(sourceNode, destinationNode);
     }
 
-    @Override
-    public double evaluateFitness() {
-        return 0;
-    }
 }

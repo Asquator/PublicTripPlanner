@@ -1,4 +1,4 @@
-package rfinder.dao;
+package rfinder.db;
 
 import org.postgresql.util.PGobject;
 
@@ -9,7 +9,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class DBManager {
+public final class DBManager {
 
     public static Connection newConnection() {
 

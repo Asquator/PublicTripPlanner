@@ -1,4 +1,4 @@
-package rfinder.structures.general;
+package rfinder.structures.common;
 
 import net.postgis.jdbc.geometry.Point;
 

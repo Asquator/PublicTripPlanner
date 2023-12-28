@@ -1,9 +1,11 @@
 package rfinder.structures.nodes;
 
-import rfinder.pathfinding.graph.GraphNode;
-import rfinder.structures.general.Location;
+import rfinder.structures.graph.GraphNode;
+import rfinder.structures.common.Location;
 
-public class VertexNode extends PathNode implements GraphNode {
+import java.util.Objects;
+
+public class VertexNode extends PathNode implements GraphNode<Integer> {
 
     private int vertexId;
 
@@ -12,8 +14,21 @@ public class VertexNode extends PathNode implements GraphNode {
         this.vertexId = vertexId ;
     }
 
-    public int getId() {
+    public Integer getId() {
         return vertexId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VertexNode that = (VertexNode) o;
+        return vertexId == that.vertexId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(vertexId);
     }
 
     @Override

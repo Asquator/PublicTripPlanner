@@ -1,8 +1,6 @@
-package rfinder.structures.general;
+package rfinder.structures.common;
 
 import net.postgis.jdbc.geometry.Point;
-
-import java.util.Objects;
 
 final class ExplicitLocation extends Location{
     private final double latitude;

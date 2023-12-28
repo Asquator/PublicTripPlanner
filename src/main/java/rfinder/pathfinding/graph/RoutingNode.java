@@ -1,5 +1,7 @@
 package rfinder.pathfinding.graph;
 
+import rfinder.structures.graph.GraphNode;
+
 import java.util.Objects;
 
 public class RoutingNode<T extends GraphNode> implements Comparable<RoutingNode> {
@@ -57,12 +59,26 @@ public class RoutingNode<T extends GraphNode> implements Comparable<RoutingNode>
     }
 
     @Override
+    public String toString() {
+        return "RoutingNode{" +
+                "current=" + current +
+                ", previous=" + previous
+                + '}';
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(current);
     }
 
     @Override
-    public int compareTo(RoutingNode routingNode) {
-        return Double.compare(estimatedScore, routingNode.estimatedScore);
+    public int compareTo(RoutingNode other) {
+        if (this.estimatedScore > other.estimatedScore) {
+            return 1;
+        } else if (this.estimatedScore < other.estimatedScore) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
 }

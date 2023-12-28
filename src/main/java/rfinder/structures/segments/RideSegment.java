@@ -1,17 +1,67 @@
 package rfinder.structures.segments;
 
+import rfinder.structures.common.TripPatternID;
+import rfinder.structures.graph.Link;
 import rfinder.structures.nodes.StopNode;
 
-public class RideSegment extends PathSegment{
+import java.util.Objects;
+import java.util.OptionalInt;
 
-    private int pattern_id;
+public class RideSegment extends NetworkTripSegment implements Link<StopNode> {
 
-    public RideSegment(StopNode source, StopNode destination){
+    private TripPatternID tripPatternID;
+
+    private OptionalInt sourceSequence;
+    private OptionalInt destinationSequence;
+
+    public RideSegment(StopNode source, StopNode destination, TripPatternID tripPatternID){
         super(source, destination);
+        this.tripPatternID = tripPatternID;
+    }
+
+    public OptionalInt getSourceSequence() {
+        return sourceSequence;
+    }
+
+    public OptionalInt getDestinationSequence() {
+        return destinationSequence;
+    }
+
+    public void setSourceSequence(int newSourceSequence) {
+        sourceSequence = OptionalInt.of(newSourceSequence);
+    }
+
+    public void setDestinationSequence(int newDestinationSequence) {
+        this.destinationSequence = OptionalInt.of(newDestinationSequence);
     }
 
     @Override
-    public double evaluateFitness() {
-        return 0;
+    public int hashCode() {
+        return Objects.hash(tripPatternID);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RideSegment that = (RideSegment) o;
+        boolean res = Objects.equals(tripPatternID, that.tripPatternID);
+
+        // if sequence numbers are specified, test their equality
+        if(sourceSequence.isPresent() && destinationSequence.isPresent())
+            res = res && Objects.equals(sourceSequence, that.sourceSequence)
+                && Objects.equals(destinationSequence, that.destinationSequence);
+
+        return res;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + "[trip pattern " + tripPatternID + "]";
+    }
+
+    @Override
+    public double getWeight() {
+        return getDistance();
     }
 }

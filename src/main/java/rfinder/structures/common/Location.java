@@ -1,4 +1,4 @@
-package rfinder.structures.general;
+package rfinder.structures.common;
 
 import net.postgis.jdbc.geometry.Point;
 
@@ -20,4 +20,6 @@ public abstract class Location {
     public String toString() {
         return "[latitude: " + latitude() + " longitude: " + longitude() + "]";
     }
+
+
 }

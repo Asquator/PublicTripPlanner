@@ -1,6 +1,6 @@
 package rfinder.structures.nodes;
 
-import rfinder.structures.general.Location;
+import rfinder.structures.common.Location;
 
 public class PathNode {
     private Location location;
@@ -16,4 +16,5 @@ public class PathNode {
     public String toString() {
         return location.toString();
     }
+
 }

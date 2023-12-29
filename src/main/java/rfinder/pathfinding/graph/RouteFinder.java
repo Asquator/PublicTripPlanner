@@ -1,6 +1,5 @@
 package rfinder.pathfinding.graph;
 
-import rfinder.model.RouteDAO;
 import rfinder.structures.graph.*;
 
 import java.util.*;

@@ -1,7 +1,7 @@
 package rfinder.pathfinding.impl;
 
-import rfinder.db.PostgisRouteDAO;
-import rfinder.model.RouteDAO;
+import rfinder.dao.PostgisRouteDAO;
+import rfinder.dao.RouteDAO;
 import rfinder.pathfinding.graph.HeuristicEvaluator;
 import rfinder.structures.nodes.VertexNode;
 

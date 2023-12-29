@@ -1,6 +1,6 @@
 package rfinder.model.network.walking;
 
-import rfinder.db.PostgisRouteDAO;
+import rfinder.dao.PostgisRouteDAO;
 import rfinder.structures.graph.RoutableGraph;
 import rfinder.structures.graph.RouteLink;
 import rfinder.structures.nodes.VertexNode;

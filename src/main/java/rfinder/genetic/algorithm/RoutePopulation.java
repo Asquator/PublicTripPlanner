@@ -1,16 +1,17 @@
 package rfinder.genetic.algorithm;
 
-import rfinder.genetic.FitnessEvaluator;
 import rfinder.genetic.structures.RouteChromosome;
 
-import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class RoutePopulation {
     private int size;
-    Set<RouteChromosome> individuals;
+    private final Set<RouteChromosome> individuals = new TreeSet<>();
 
-    public RoutePopulation(){
-
+    public void add(RouteChromosome solution){
+        individuals.add(solution);
     }
+
+
 }

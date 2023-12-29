@@ -1,4 +1,4 @@
-package rfinder.db;
+package rfinder.dao;
 
 public final class PostgisQuery {
     public static final String LOC_BY_STOP = "select stop_loc from stops where stop_id = ?";
@@ -29,5 +29,9 @@ public final class PostgisQuery {
             "select target as source, source as target, km, geom_dest as geom_source, geom_source as geom_dest from edge_map";
 
     public static final String TRANSPORT_LINKS = "select * from transport_network where source_stop = ?";
+
+    public static final String CLOSEST_STOPS_IN_RADIUS = "select stop_id, stop_loc\n" +
+            "from stops\n" +
+            "where ST_Distance(?, stop_loc::geography) / 1000 < ?";
 }
 

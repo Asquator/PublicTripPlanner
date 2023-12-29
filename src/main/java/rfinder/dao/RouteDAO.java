@@ -1,4 +1,4 @@
-package rfinder.model;
+package rfinder.dao;
 
 import rfinder.structures.common.Location;
 import rfinder.structures.graph.RouteLink;
@@ -47,4 +47,5 @@ public interface RouteDAO {
 
     Set<RideSegment> getTransportLinks(StopNode stopNode);
 
+    Set<StopNode> getStopsInRadius(Location location, double radius);
 }

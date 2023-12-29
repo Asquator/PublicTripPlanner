@@ -1,7 +1,7 @@
 package tests;
 
-import rfinder.db.PostgisRouteDAO;
-import rfinder.model.RouteDAO;
+import rfinder.dao.PostgisRouteDAO;
+import rfinder.dao.RouteDAO;
 import rfinder.structures.graph.Graph;
 import rfinder.pathfinding.graph.RouteFinder;
 import rfinder.pathfinding.impl.HaversineDistanceEvaluator;

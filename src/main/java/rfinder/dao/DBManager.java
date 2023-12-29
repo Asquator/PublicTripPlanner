@@ -1,4 +1,4 @@
-package rfinder.db;
+package rfinder.dao;
 
 import org.postgresql.util.PGobject;
 

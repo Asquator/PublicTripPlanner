@@ -1,8 +1,8 @@
-package rfinder.db;
+package rfinder.dao;
 
 import net.postgis.jdbc.PGgeometry;
+import net.postgis.jdbc.geometry.Geometry;
 import net.postgis.jdbc.geometry.Point;
-import rfinder.model.RouteDAO;
 import rfinder.structures.graph.RouteLink;
 import rfinder.structures.common.Location;
 import rfinder.structures.common.TripPatternID;
@@ -258,6 +258,30 @@ public class PostgisRouteDAO implements RouteDAO {
         }
 
         return links;
+    }
+
+    @Override
+    public Set<StopNode> getStopsInRadius(Location location, double radius) {
+        ResultSet res;
+        Set<StopNode> ret = new HashSet<>();
+
+        try (PreparedStatement statement = connection.prepareStatement(PostgisQuery.CLOSEST_STOPS_IN_RADIUS)){
+            statement.setObject(1, new PGgeometry((Geometry) location.toPoint()));
+            statement.setDouble(2, radius);
+
+            res = statement.executeQuery();
+
+            while (res.next()){
+                Point point = (Point)((PGgeometry) res.getObject("stop_loc")).getGeometry();
+                String id = res.getString("stop_id");
+                ret.add(new StopNode(Location.fromPoint(point), id));
+            }
+        }
+        catch (SQLException ex){
+            throw new RuntimeException(ex);
+        }
+
+        return ret;
     }
 
 }

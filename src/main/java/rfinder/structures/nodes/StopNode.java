@@ -34,7 +34,7 @@ public class StopNode extends PathNode implements GraphNode<String> {
 
     @Override
     public String toString() {
-        return super.toString() + "[stop id " + stopId + "]";
+         return "[stop id " + stopId + "]";
     }
 
     @Override

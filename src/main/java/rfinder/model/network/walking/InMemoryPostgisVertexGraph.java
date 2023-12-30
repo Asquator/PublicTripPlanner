@@ -1,6 +1,6 @@
 package rfinder.model.network.walking;
 
-import rfinder.dao.PostgisRouteDAO;
+import rfinder.dao.PostgisDAO;
 import rfinder.structures.graph.RoutableGraph;
 import rfinder.structures.graph.RouteLink;
 import rfinder.structures.nodes.VertexNode;
@@ -12,7 +12,7 @@ public class InMemoryPostgisVertexGraph implements RoutableGraph<VertexNode> {
 
     private HashMap<VertexNode, Set<RouteLink<VertexNode>>> connections;
 
-    public InMemoryPostgisVertexGraph(PostgisRouteDAO dao){
+    public InMemoryPostgisVertexGraph(PostgisDAO dao){
         connections = dao.getFullGraph();
         System.out.println("Initialized graph, total nodes " + connections.size());
     }

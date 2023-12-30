@@ -1,23 +1,30 @@
 package rfinder.model.network.transport;
 
-import rfinder.dao.PostgisRouteDAO;
+import rfinder.dao.PostgisDAO;
 import rfinder.structures.common.Location;
+import rfinder.structures.graph.Link;
 import rfinder.structures.nodes.StopNode;
 import rfinder.structures.segments.RideSegment;
 
 import java.util.Set;
 
-public class PostgisTransportGraph extends TransportGraph {
-    private final PostgisRouteDAO dao = new PostgisRouteDAO();
+public class PostgisTransportGraph implements TransportGraph {
+    private final PostgisDAO dao = new PostgisDAO();
 
     @Override
     public Set<RideSegment> getLinks(StopNode node) {
-        return dao.getTransportLinks(node);
+        return dao.getTransportLinks(node, false);
+    }
+
+    @Override
+    public Set<RideSegment> getLinks(StopNode node, boolean continued) {
+        return dao.getTransportLinks(node, continued);
     }
 
     @Override
     public Set<StopNode> adjacentStops(Location location) {
         return null;
     }
+
 }
 

@@ -28,10 +28,15 @@ public final class PostgisQuery {
             "union " +
             "select target as source, source as target, km, geom_dest as geom_source, geom_source as geom_dest from edge_map";
 
-    public static final String TRANSPORT_LINKS = "select * from transport_network where source_stop = ?";
-
     public static final String CLOSEST_STOPS_IN_RADIUS = "select stop_id, stop_loc\n" +
             "from stops\n" +
             "where ST_Distance(?, stop_loc::geography) / 1000 < ?";
+
+    public static final String TRANSPORT_LINKS = "select * from transport_network where source_stop = ?";
+
+    public static final String TRANSPORT_LINKS_CONT = "select * from transport_network tn1 where source_stop=?\n" +
+            "and exists(select 1\n" +
+            "\t\t   from transport_network tn2 \n" +
+            "\t\t   where tn2.source_stop = tn1.dest_stop and (tn2.route_id, tn2.shape_id) <> (tn1.route_id, tn1.shape_id))";
 }
 

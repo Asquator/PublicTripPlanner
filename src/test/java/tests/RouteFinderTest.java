@@ -1,6 +1,7 @@
 package tests;
 
-import rfinder.dao.PostgisRouteDAO;
+import rfinder.dao.PostgisDAO;
+import rfinder.dao.RoadDAO;
 import rfinder.dao.RouteDAO;
 import rfinder.structures.graph.Graph;
 import rfinder.pathfinding.graph.RouteFinder;
@@ -13,9 +14,9 @@ import java.util.List;
 
 public class RouteFinderTest {
     public static void main(String[] args) throws Exception {
-        RouteDAO dao = new PostgisRouteDAO();
+        RoadDAO dao = new PostgisDAO();
 
-        InMemoryPostgisVertexGraph inMemoryGraph = new InMemoryPostgisVertexGraph((PostgisRouteDAO) dao);
+        InMemoryPostgisVertexGraph inMemoryGraph = new InMemoryPostgisVertexGraph((PostgisDAO) dao);
 
         Graph<VertexNode> graph = new PostgisVertexGraph();
         RouteFinder rf = new RouteFinder(inMemoryGraph, new HaversineDistanceEvaluator());

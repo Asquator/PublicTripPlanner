@@ -19,10 +19,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class PostgisRouteDAO implements RouteDAO {
+public class PostgisDAO implements RouteDAO, RoadDAO {
     private Connection connection;
 
-    public PostgisRouteDAO(){
+    public PostgisDAO(){
         connection = DBManager.newConnection();
     }
 
@@ -122,33 +122,9 @@ public class PostgisRouteDAO implements RouteDAO {
     }
 
     @Override
-    public double getEuclideanDistance(VertexNode node1, VertexNode node2) {
-        ResultSet res;
-        // Get stop location as a point
-        try (PreparedStatement statement = connection.prepareStatement(PostgisQuery.VERTEX_EUCLIDEAN_DISTANCE)){
-            int id1 = node1.getId();
-            int id2 = node2.getId();
-            statement.setInt(1, id1);
-            statement.setInt(2, id2);
-
-            res = statement.executeQuery();
-            if(res.next())
-                return res.getDouble(1);
-
-            else
-                throw new RuntimeException("Could not compute distance");
-        }
-        catch (SQLException ex){
-            throw new RuntimeException(ex);
-        }
-
-    }
-
-    @Override
     public Set<RouteLink<VertexNode>> getRoadLinks(VertexNode vertexNode) {
         return getRoadLinks(vertexNode.getId());
     }
-
 
     public Set<RouteLink<VertexNode>> getRoadLinks(int vertexId) {
         ResultSet res;
@@ -223,11 +199,12 @@ public class PostgisRouteDAO implements RouteDAO {
     }
 
     @Override
-    public Set<RideSegment> getTransportLinks(StopNode stopNode) {
+    public Set<RideSegment> getTransportLinks(StopNode stopNode, boolean continued) {
         ResultSet res;
         Set<RideSegment> links = new HashSet<>();
 
-        try (PreparedStatement statement = connection.prepareStatement(PostgisQuery.TRANSPORT_LINKS)){
+        try (PreparedStatement statement = connection.prepareStatement(continued ?
+                PostgisQuery.TRANSPORT_LINKS_CONT : PostgisQuery.TRANSPORT_LINKS)){
             statement.setString(1, stopNode.getStopId());
 
             res = statement.executeQuery();
@@ -249,6 +226,7 @@ public class PostgisRouteDAO implements RouteDAO {
                 RideSegment segment = new RideSegment(stopNode, destNode, new TripPatternID(routeId, shapeId));
                 segment.setSourceSequence(sourceSequence);
                 segment.setDestinationSequence(destSequence);
+                segment.setDistance(distance);
 
                 links.add(segment);
             }

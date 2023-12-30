@@ -55,6 +55,10 @@ public class RideSegment extends NetworkTripSegment implements Link<StopNode> {
         return res;
     }
 
+    public TripPatternID getTripPatternID() {
+        return tripPatternID;
+    }
+
     @Override
     public String toString() {
         return super.toString() + "[trip pattern " + tripPatternID + "]";

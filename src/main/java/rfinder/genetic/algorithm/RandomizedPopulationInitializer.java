@@ -61,9 +61,8 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
 
     // generate a single solution
     private RouteChromosome generateNewSolution(PathNode source, PathNode destination){
-        RouteChromosome solution = new RouteChromosome();
         StopNode stop, sourceStop;
-        NetworkTripSegment segment;
+        NetworkTripLink link;
         TransferMode nextMode;
 
         int rides = rnd.nextInt(traits.maxTransfers()) + 1;
@@ -83,8 +82,10 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
             return null;
         }
 
+        RouteChromosome solution = new RouteChromosome(source);
+
         if(nextMode == TransferMode.WALK)
-            solution.add(new WalkSegment(source, sourceStop));
+            solution.add(new WalkLink(sourceStop));
 
         stop = sourceStop;
         usedStops.add(stop);
@@ -96,23 +97,23 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
             nextMode = drawMode();
 
             try {
-                segment = getRideComponent(stop, nextMode == TransferMode.DIRECT &&
+                link = getRideComponent(stop, nextMode == TransferMode.DIRECT &&
                         ridesCnt < rides);
             } catch (NotFoundException ex){ // no continuation from here
                 return null;
             }
 
-            usedTrips.add(((RideSegment)segment).getTripPatternID());
-            usedStops.add(segment.getDestination());
-            solution.add(segment);
-            stop = segment.getDestination();
+            usedTrips.add(((RideLink)link).getTripPatternID());
+            usedStops.add(link.getDestination());
+            solution.add(link);
+            stop = link.getDestination();
 
             if(ridesCnt < rides && nextMode == TransferMode.WALK)
                 try {
-                    segment = getTransferComponent(stop);
-                    solution.add(segment);
-                    usedStops.add(segment.getDestination());
-                    stop = segment.getDestination();
+                    link = getTransferComponent(stop);
+                    solution.add(link);
+                    stop = link.getDestination();
+                    usedStops.add(stop);
                 }
                 catch (NotFoundException ex){
                     return null;
@@ -122,28 +123,28 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
         if(destination instanceof StopNode && stop.equals(destination))
             return solution;
 
-        solution.add(new WalkSegment(stop, destination));
+        solution.add(new WalkLink(destination));
         return solution;
     }
 
-    private RideSegment getRideComponent(StopNode stop, boolean continued) throws NotFoundException {
-        Set<RideSegment> links = dao.getTransportLinks(stop, continued);
+    private RideLink getRideComponent(StopNode stop, boolean continued) throws NotFoundException {
+        Set<RideLink> links = dao.getTransportLinks(stop, continued);
 
-        links.removeIf(segment -> usedTrips.contains(segment.getTripPatternID()) ||
-                usedStops.contains(segment.getDestination()));
+        links.removeIf(link -> usedTrips.contains(link.getTripPatternID()) ||
+                usedStops.contains(link.getDestination()));
 
         if (links.isEmpty())
             throw new NotFoundException(stop.getLocation());
 
-        List<RideSegment> linksList = new ArrayList<>(links);
+        List<RideLink> linksList = new ArrayList<>(links);
 
         return linksList.get(rnd.nextInt(linksList.size()));
     }
 
 
-    private TransferWalkSegment getTransferComponent(StopNode stop) throws NotFoundException {
+    private TransferWalkLink getTransferComponent(StopNode stop) throws NotFoundException {
         StopNode nextStop = getRandomAdjacentStop(stop.getLocation());
-        return new TransferWalkSegment(stop, nextStop);
+        return new TransferWalkLink(nextStop);
     }
 
 

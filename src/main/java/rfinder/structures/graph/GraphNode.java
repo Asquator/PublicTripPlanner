@@ -4,7 +4,7 @@ public interface GraphNode<T extends Comparable<T>>  extends Comparable<GraphNod
     T getId();
 
     @Override
-    public default int compareTo(GraphNode<? extends T> otherNode){
+    default int compareTo(GraphNode<? extends T> otherNode){
         return getId().compareTo(otherNode.getId());
     }
 }

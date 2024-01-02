@@ -8,7 +8,7 @@ public class RouteFinder <T extends GraphNode>{
     private final RoutableGraph<T> graph;
     private final HeuristicEvaluator<T> heuristicEvaluator;
 
-    public RouteFinder(RoutableGraph<T> graph, HeuristicEvaluator<T> heuristicEvaluator) throws UnroutableGraphException{
+    public RouteFinder(RoutableGraph<T> graph, HeuristicEvaluator<T> heuristicEvaluator){
         this.graph = graph;
         this.heuristicEvaluator = heuristicEvaluator;
     }
@@ -23,7 +23,7 @@ public class RouteFinder <T extends GraphNode>{
         PriorityQueue<RoutingNode<T>> openSet = new PriorityQueue<>();
         Map<T, RoutingNode<T>> exploredSet = new HashMap<>();
 
-        RoutingNode rSource = new RoutingNode<>(source, null, 0, heuristicEvaluator.evaluateHeuristic(source, destination));
+        RoutingNode<T> rSource = new RoutingNode<>(source, null, 0, heuristicEvaluator.evaluateHeuristic(source, destination));
         openSet.add(rSource);
         exploredSet.put(source, rSource);
 

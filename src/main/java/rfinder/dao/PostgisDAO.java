@@ -8,6 +8,7 @@ import rfinder.structures.common.Location;
 import rfinder.structures.common.TripPatternID;
 import rfinder.structures.nodes.StopNode;
 import rfinder.structures.nodes.VertexNode;
+import rfinder.structures.segments.RideLink;
 import rfinder.structures.segments.RideSegment;
 
 import java.sql.Connection;
@@ -199,9 +200,9 @@ public class PostgisDAO implements RouteDAO, RoadDAO {
     }
 
     @Override
-    public Set<RideSegment> getTransportLinks(StopNode stopNode, boolean continued) {
+    public Set<RideLink> getTransportLinks(StopNode stopNode, boolean continued) {
         ResultSet res;
-        Set<RideSegment> links = new HashSet<>();
+        Set<RideLink> links = new HashSet<>();
 
         try (PreparedStatement statement = connection.prepareStatement(continued ?
                 PostgisQuery.TRANSPORT_LINKS_CONT : PostgisQuery.TRANSPORT_LINKS)){
@@ -223,12 +224,9 @@ public class PostgisDAO implements RouteDAO, RoadDAO {
 
                 StopNode destNode = new StopNode(destLocation, destStop);
 
-                RideSegment segment = new RideSegment(stopNode, destNode, new TripPatternID(routeId, shapeId));
-                segment.setSourceSequence(sourceSequence);
-                segment.setDestinationSequence(destSequence);
-                segment.setDistance(distance);
-
-                links.add(segment);
+                RideLink link = new RideLink(destNode, new TripPatternID(routeId, shapeId),
+                        sourceSequence, destSequence, distance);
+                links.add(link);
             }
         }
         catch (SQLException ex){

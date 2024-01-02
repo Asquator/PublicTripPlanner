@@ -11,17 +11,13 @@ public class PathLink implements Link<PathNode> {
         this.destinationNode = destinationNode;
     }
 
-    public PathNode getDestinationNode() {
+    @Override
+    public PathNode getDestination() {
         return destinationNode;
     }
 
     @Override
-    public PathNode getDestination() {
-        return null;
-    }
-
-    @Override
     public String toString() {
-        return " ---> " + destinationNode;
+        return destinationNode.toString();
     }
 }

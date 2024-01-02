@@ -4,6 +4,7 @@ import rfinder.structures.common.Location;
 import rfinder.structures.graph.RouteLink;
 import rfinder.structures.nodes.StopNode;
 import rfinder.structures.nodes.VertexNode;
+import rfinder.structures.segments.RideLink;
 import rfinder.structures.segments.RideSegment;
 
 import java.util.Set;
@@ -17,7 +18,7 @@ public interface RouteDAO {
      */
     Location getStopLocation(String stopId);
 
-    Set<RideSegment> getTransportLinks(StopNode stopNode, boolean continued);
+    Set<RideLink> getTransportLinks(StopNode stopNode, boolean continued);
 
     Set<StopNode> getStopsInRadius(Location location, double radius);
 }

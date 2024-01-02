@@ -2,49 +2,48 @@ package rfinder.genetic.structures;
 
 import genetic.composite.Evaluable;
 import rfinder.structures.nodes.PathNode;
-import rfinder.structures.segments.PathSegment;
-import rfinder.structures.segments.RideSegment;
-import rfinder.structures.segments.TransferWalkSegment;
-import rfinder.structures.segments.WalkSegment;
+import rfinder.structures.segments.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class RouteChromosome implements Evaluable, Iterable<PathSegment> {
+public class RouteChromosome implements Evaluable, Iterable<PathLink> {
 
-    private ArrayList<PathSegment> segments = new ArrayList<>();
+    private final PathNode startNode;
+    private static final String separator = " | ";
 
-    public void add(PathSegment segment){
-        segments.add(segment);
+    private final ArrayList<PathLink> links = new ArrayList<>();
+
+    public RouteChromosome(PathNode startNode){
+        this.startNode = startNode;
+    }
+
+    public void add(PathLink link){
+        links.add(link);
     }
 
     @Override
-    public Iterator<PathSegment> iterator() {
-        return segments.iterator();
+    public Iterator<PathLink> iterator() {
+        return links.iterator();
     }
 
     @Override
     public String toString() {
-        PathSegment segment;
 
         StringBuilder stringBuilder = new StringBuilder();
-        Iterator<PathSegment> iterator = segments.iterator();
-        segment = iterator.next();
-        stringBuilder.append(segment.getSource());
+        stringBuilder.append(startNode);
 
-    do{
-        stringBuilder.append(segment.getSource());
+        stringBuilder.append(separator);
+        for(PathLink link : links){
+            if(link instanceof RideLink rideLink)
+                stringBuilder.append(rideLink.getTripPatternID()).append(separator)
+                        .append(rideLink.getDestination());
 
-        if (segment instanceof WalkSegment)
-            stringBuilder.append("-walk->");
+            else
+                stringBuilder.append(link);
 
-        if (segment instanceof RideSegment)
-            stringBuilder.append(((RideSegment) (segment)).getTripPatternID());
-
-        segment = iterator.next();
-    } while (iterator.hasNext());
-
-        stringBuilder.append(segments.get(segments.size() - 1));
+            stringBuilder.append(separator);
+        }
 
         return stringBuilder.toString();
     }

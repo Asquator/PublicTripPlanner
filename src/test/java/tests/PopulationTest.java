@@ -7,6 +7,7 @@ import rfinder.genetic.structures.PopulationTraits;
 import rfinder.genetic.structures.RouteChromosome;
 import rfinder.structures.nodes.PathNode;
 import rfinder.structures.nodes.StopNode;
+import rfinder.structures.segments.PathLink;
 import rfinder.structures.segments.PathSegment;
 import rfinder.structures.segments.RideSegment;
 
@@ -26,15 +27,6 @@ public class PopulationTest {
         for(RouteChromosome solution : population){
             System.out.println("\n\nSolution number " + counter++);
             System.out.println(solution);
-        }
-
-        System.out.println("\n\n");
-
-        for(RouteChromosome solution : population){
-            for(PathSegment segment : solution)
-                System.out.println(segment);
-
-            System.out.println("\n");
         }
     }
 }

@@ -3,6 +3,7 @@ package rfinder.genetic.algorithm;
 import rfinder.genetic.structures.RouteChromosome;
 import rfinder.dao.RouteDAO;
 import rfinder.genetic.structures.PopulationTraits;
+import rfinder.structures.common.Location;
 import rfinder.structures.common.TripPatternID;
 import rfinder.structures.nodes.PathNode;
 import rfinder.structures.nodes.StopNode;
@@ -19,8 +20,14 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
     private HashSet<StopNode> usedStops;
     private HashSet<TripPatternID> usedTrips;
 
-    public enum Mode {
-        RIDE, TRANSFER
+    private static class NotFoundException extends Exception {
+        public NotFoundException(Location location) {
+            super("No continuation found from " + location);
+        }
+    }
+
+    public enum TransferMode {
+        DIRECT, WALK
     }
 
     public RandomizedPopulationInitializer(RouteDAO dao, PopulationTraits traits){
@@ -37,6 +44,9 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
 
         while(counter < traits.maxSize()){
             solution = generateNewSolution(source, destination);
+            if(solution == null)
+                continue;
+
             population.add(solution);
             counter++;
         }
@@ -53,56 +63,61 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
     private RouteChromosome generateNewSolution(PathNode source, PathNode destination){
         RouteChromosome solution = new RouteChromosome();
         StopNode stop, sourceStop;
-        Set<StopNode> adjacentStops;
-        Mode nextMode;
+        NetworkTripSegment segment;
+        TransferMode nextMode;
 
-        int transfers = traits.maxTransfers();
-        transfers = Integer.min(traits.maxTransfers(), rnd.nextInt(transfers + 1));
-
-        int transferCnt = 0;
-
-        if(source instanceof StopNode)
-            sourceStop = (StopNode) source;
-
-        else {
-            adjacentStops = dao.getStopsInRadius(source.getLocation(), traits.transferRadius());
-            sourceStop = adjacentStops.stream().skip(rnd.nextInt(adjacentStops.size())).findFirst().orElse(null);
-        }
-
-        if(sourceStop == null)
-            return null;
+        int rides = rnd.nextInt(traits.maxTransfers()) + 1;
+        int ridesCnt = 0;
 
         resetContext();
 
+        nextMode = source instanceof StopNode ? drawMode() : TransferMode.WALK;
+
+        try {
+            sourceStop = switch (nextMode){
+                case DIRECT ->  (StopNode) source;
+                case WALK -> getRandomAdjacentStop(source.getLocation());
+            };
+        }
+        catch (NotFoundException ex) {
+            return null;
+        }
+
+        if(nextMode == TransferMode.WALK)
+            solution.add(new WalkSegment(source, sourceStop));
+
         stop = sourceStop;
-
         usedStops.add(stop);
-        nextMode = Mode.RIDE;
-
-
-        NetworkTripSegment segment = null;
 
         do {
-            switch (nextMode){
-                case RIDE -> {
-                    segment = getRideComponent(stop, transferCnt != transfers);
-                    solution.add(segment);
-                }
+            ridesCnt++;
 
-                case TRANSFER -> {
-                    segment = getTransferComponent(stop, transferCnt != transfers);
-                    solution.add(segment);
-                    transferCnt++;
-                }
-            }
-
-            if(segment == null)
-                return null;
-
-            stop = segment.getDestination();
+            // draw next transfer mode
             nextMode = drawMode();
 
-        } while (transferCnt < transfers);
+            try {
+                segment = getRideComponent(stop, nextMode == TransferMode.DIRECT &&
+                        ridesCnt < rides);
+            } catch (NotFoundException ex){ // no continuation from here
+                return null;
+            }
+
+            usedTrips.add(((RideSegment)segment).getTripPatternID());
+            usedStops.add(segment.getDestination());
+            solution.add(segment);
+            stop = segment.getDestination();
+
+            if(ridesCnt < rides && nextMode == TransferMode.WALK)
+                try {
+                    segment = getTransferComponent(stop);
+                    solution.add(segment);
+                    usedStops.add(segment.getDestination());
+                    stop = segment.getDestination();
+                }
+                catch (NotFoundException ex){
+                    return null;
+                }
+        } while (ridesCnt < rides);
 
         if(destination instanceof StopNode && stop.equals(destination))
             return solution;
@@ -111,34 +126,41 @@ public class RandomizedPopulationInitializer implements PopulationInitializer {
         return solution;
     }
 
-    private RideSegment getRideComponent(StopNode stop, boolean continued){
+    private RideSegment getRideComponent(StopNode stop, boolean continued) throws NotFoundException {
         Set<RideSegment> links = dao.getTransportLinks(stop, continued);
 
         links.removeIf(segment -> usedTrips.contains(segment.getTripPatternID()) ||
                 usedStops.contains(segment.getDestination()));
 
         if (links.isEmpty())
-            return null;
+            throw new NotFoundException(stop.getLocation());
 
         List<RideSegment> linksList = new ArrayList<>(links);
 
         return linksList.get(rnd.nextInt(linksList.size()));
     }
 
-    private TransferWalkSegment getTransferComponent(StopNode stop, boolean continued) {
-        Set<StopNode> availableStops = dao.getStopsInRadius(stop.getLocation(), traits.transferRadius());
+
+    private TransferWalkSegment getTransferComponent(StopNode stop) throws NotFoundException {
+        StopNode nextStop = getRandomAdjacentStop(stop.getLocation());
+        return new TransferWalkSegment(stop, nextStop);
+    }
+
+
+    private StopNode getRandomAdjacentStop(Location location) throws NotFoundException {
+        Set<StopNode> availableStops = dao.getStopsInRadius(location, traits.transferRadius());
 
         availableStops.removeIf(stopNode -> usedStops.contains(stopNode));
 
         List<StopNode> stopList = new ArrayList<>(availableStops);
+        if(stopList.isEmpty())
+            throw new NotFoundException(location);
 
-        StopNode nextStop = stopList.get(rnd.nextInt(stopList.size()));
-
-        return new TransferWalkSegment(stop, nextStop);
+        return stopList.get(rnd.nextInt(stopList.size()));
     }
 
-    private Mode drawMode(){
-        return Mode.values()[rnd.nextInt(Mode.values().length)];
+    private TransferMode drawMode(){
+        return TransferMode.values()[rnd.nextInt(TransferMode.values().length)];
     }
 }
 

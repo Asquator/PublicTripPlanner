@@ -1,6 +1,5 @@
 package rfinder.structures.graph;
 
-public interface Link <T extends GraphNode>{
+public interface Link <T>{
     T getDestination();
-    double getWeight();
 }

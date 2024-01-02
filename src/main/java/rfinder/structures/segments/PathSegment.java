@@ -3,8 +3,8 @@ package rfinder.structures.segments;
 import rfinder.structures.nodes.PathNode;
 
 public abstract class PathSegment  {
-    private PathNode sourceNode;
-    private PathNode destinationNode;
+    private final PathNode sourceNode;
+    private final PathNode destinationNode;
 
     private double distance = 0;
 
@@ -12,7 +12,7 @@ public abstract class PathSegment  {
         this.sourceNode = sourceNode;
         this.destinationNode = destinationNode;
     }
-
+    
     public PathNode getSource() {
         return sourceNode;
     }

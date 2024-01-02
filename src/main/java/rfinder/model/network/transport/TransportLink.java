@@ -1,12 +1,12 @@
 package rfinder.model.network.transport;
 
-import rfinder.structures.graph.Link;
+import rfinder.structures.graph.WeightedLink;
 import rfinder.structures.nodes.StopNode;
 import rfinder.structures.segments.RideSegment;
 
 import java.util.Objects;
 
-public final class TransportLink implements Link<StopNode> {
+public final class TransportLink implements WeightedLink<StopNode> {
     private final RideSegment segment;
 
     public TransportLink(RideSegment segment) {

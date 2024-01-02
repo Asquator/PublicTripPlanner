@@ -4,7 +4,6 @@ import rfinder.structures.nodes.StopNode;
 
 public class NetworkTripSegment extends PathSegment{
 
-
     public NetworkTripSegment(StopNode sourceNode, StopNode destinationNode) {
         super(sourceNode, destinationNode);
     }

@@ -2,7 +2,7 @@ package rfinder.structures.graph;
 
 import java.util.Objects;
 
-public final class RouteLink<T extends GraphNode> implements Link<T> {
+public final class RouteLink<T extends GraphNode> implements WeightedLink<T> {
     private final T destination;
     private final double weight;
 

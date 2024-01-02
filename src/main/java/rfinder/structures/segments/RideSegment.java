@@ -1,13 +1,13 @@
 package rfinder.structures.segments;
 
 import rfinder.structures.common.TripPatternID;
-import rfinder.structures.graph.Link;
+import rfinder.structures.graph.WeightedLink;
 import rfinder.structures.nodes.StopNode;
 
 import java.util.Objects;
 import java.util.OptionalInt;
 
-public class RideSegment extends NetworkTripSegment implements Link<StopNode> {
+public class RideSegment extends NetworkTripSegment implements WeightedLink<StopNode> {
 
     private TripPatternID tripPatternID;
 

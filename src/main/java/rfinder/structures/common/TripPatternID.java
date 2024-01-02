@@ -18,6 +18,6 @@ public record TripPatternID(String route_id, String shape_id) {
 
     @Override
     public String toString() {
-        return "[route id " + route_id + "][shape id " + shape_id + "]";
+        return "[route id " + route_id + " shape " + shape_id + "]";
     }
 }

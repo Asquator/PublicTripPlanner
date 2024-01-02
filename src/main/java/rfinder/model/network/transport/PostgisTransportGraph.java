@@ -2,7 +2,6 @@ package rfinder.model.network.transport;
 
 import rfinder.dao.PostgisDAO;
 import rfinder.structures.common.Location;
-import rfinder.structures.graph.Link;
 import rfinder.structures.nodes.StopNode;
 import rfinder.structures.segments.RideSegment;
 

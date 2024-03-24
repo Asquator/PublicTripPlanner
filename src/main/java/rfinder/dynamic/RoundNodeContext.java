@@ -1,22 +1,25 @@
 package rfinder.dynamic;
 
-import rfinder.structures.nodes.StopNode;
-
 import java.util.Arrays;
 
-public class RoundStopContext {
+public class RoundNodeContext {
+
 
     private final MultilabelBag[] roundLabels;
-    private final StopNode stopNode;
+    private final rfinder.structures.nodes.PathNode PathNode;
 
 
-    public StopNode getStopNode() {
-        return stopNode;
+    public rfinder.structures.nodes.PathNode getPathNode() {
+        return PathNode;
     }
 
-    public RoundStopContext(StopNode stopNode, int size){
-        this.stopNode = stopNode;
+    public RoundNodeContext(rfinder.structures.nodes.PathNode node, int size){
+        this.PathNode = node;
         roundLabels = new MultilabelBag[size];
+    }
+
+    public int size(){
+        return roundLabels.length;
     }
 
     public MultilabelBag[] getRoundLabels() {
@@ -27,7 +30,7 @@ public class RoundStopContext {
     public String toString() {
         return "RoundLabeledStop{" +
                 "roundLabels=" + Arrays.toString(roundLabels) +
-                ", stopNode=" + stopNode +
+                ", stopNode=" + PathNode +
                 '}';
     }
 }

@@ -1,37 +1,38 @@
-package rfinder.structures.components;
+package rfinder.query.result;
 
-import rfinder.structures.nodes.PathNode;
 
-public abstract class PathSegment {
-    private final PathNode sourceNode;
-    private final PathNode destinationNode;
+import rfinder.structures.common.Location;
 
-    private double distance = 0;
+import java.util.List;
 
-    public PathSegment(PathNode sourceNode, PathNode destinationNode){
+public abstract class PathSegment implements PathElement{
+    private final NominalPathElement sourceNode;
+    private final NominalPathElement destinationNode;
+
+    private final List<Location> shape;
+
+    public PathSegment(NominalPathElement sourceNode, NominalPathElement destinationNode, List<Location> shape) {
         this.sourceNode = sourceNode;
         this.destinationNode = destinationNode;
+        this.shape = shape;
     }
-    
-    public PathNode getSource() {
+
+
+    public NominalPathElement getSource() {
         return sourceNode;
     }
 
-    public PathNode getDestination() {
+    public NominalPathElement getDestination() {
         return destinationNode;
     }
 
-    public double getDistance() {
-        return distance;
-    }
-
-    public void setDistance(double distance) {
-        this.distance = distance;
+    @Override
+    public List<Location> getShape() {
+        return shape;
     }
 
     @Override
     public String toString() {
-        String ret = "[source " + sourceNode + "][target " + destinationNode + "][distance " + distance + "]";
-        return ret;
+        return super.toString();
     }
 }

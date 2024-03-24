@@ -2,10 +2,9 @@ package rfinder.dao;
 
 import net.postgis.jdbc.PGgeometry;
 import net.postgis.jdbc.geometry.Point;
-import rfinder.model.network.walking.EdgeLinkage;
+import rfinder.pathfinding.EdgeLinkage;
 import rfinder.structures.common.Location;
 import rfinder.structures.nodes.NodeFactory;
-import rfinder.structures.nodes.PathNode;
 import rfinder.structures.nodes.VertexNode;
 
 import java.sql.ResultSet;

@@ -1,15 +1,14 @@
 package rfinder.dynamic;
 
-import rfinder.structures.components.TripSequentialLink;
-import rfinder.structures.nodes.StopNode;
+import rfinder.structures.components.RideLink;
 
 public class RouteMultilabel extends Multilabel{
-    public RouteMultilabel(Multilabel other, StopNode sourceStop, int tripSequence){
+    public RouteMultilabel(Multilabel other, RideLink link){
         super(other);
-        setBackwardLink(new TripSequentialLink(sourceStop, tripSequence));
+        setBackwardLink(link);
     }
 
     public int getTripSequence() {
-        return ((TripSequentialLink) getBackwardLink()).getTripSequence();
+        return ((RideLink) getBackwardLink()).getTripSequence();
     }
 }

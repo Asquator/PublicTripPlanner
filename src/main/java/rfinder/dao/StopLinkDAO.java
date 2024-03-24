@@ -2,7 +2,8 @@ package rfinder.dao;
 
 import net.postgis.jdbc.PGgeometry;
 import net.postgis.jdbc.geometry.Point;
-import rfinder.model.network.walking.EdgeLinkage;
+import rfinder.pathfinding.EdgeLinkage;
+import rfinder.query.result.StopView;
 import rfinder.structures.common.Location;
 import rfinder.structures.nodes.NodeFactory;
 import rfinder.structures.nodes.StopNode;
@@ -19,24 +20,23 @@ public class StopLinkDAO implements StopDAO {
 
     private final Connection connection = DBManager.newConnection();
 
-    public static final String ALL_STOPS = "select stop_id, stop_loc from stops";
-    private static final String LOC_BY_STOP = "select stop_loc from stops where stop_id = ?";
+    private static final String STOP_BY_ID = "select * from stops where stop_id = ?";
 
     private static final String LINK_STOPS = "select * from stop_linkage";
 
     @Override
-    public Location getStopById (String stopId) {
+    public Location locById(String stopId) {
 
         ResultSet res;
         // get stop location as a point
-        try (PreparedStatement statement = connection.prepareStatement(LOC_BY_STOP)){
+        try (PreparedStatement statement = connection.prepareStatement(STOP_BY_ID)){
             statement.setString(1, stopId);
 
             res = statement.executeQuery();
 
             //if the location has been found, return a proxy object
             if(res.next()) {
-                Point point = (Point)(new PGgeometry(res.getObject(1).toString())).getGeometry();
+                Point point = (Point)(new PGgeometry(res.getObject("stop_loc").toString())).getGeometry();
                 return Location.fromPoint(point);
             }
             else
@@ -48,8 +48,31 @@ public class StopLinkDAO implements StopDAO {
     }
 
     @Override
-    public Location getStopById(int stopId) {
-        return getStopById(Integer.toString(stopId));
+    public Location locById(int stopId) {
+        return locById(Integer.toString(stopId));
+    }
+
+    @Override
+    public StopView viewById(int stopId) {
+
+        ResultSet res;
+        // get stop location as a point
+        try (PreparedStatement statement = connection.prepareStatement(STOP_BY_ID)){
+            statement.setString(1, String.valueOf(stopId));
+
+            res = statement.executeQuery();
+
+            //if the location has been found, return a proxy object
+            if(res.next()) {
+                Point point = (Point)(new PGgeometry(res.getObject("stop_loc").toString())).getGeometry();
+                return new StopView(stopId, Location.fromPoint(point), res.getString("stop_name"));
+            }
+            else
+                throw new RuntimeException("Couldn't find stop");
+        }
+        catch (SQLException ex){
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

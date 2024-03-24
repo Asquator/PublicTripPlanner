@@ -60,28 +60,5 @@ public class DefaultFootpathDAO implements FootpathDAO {
         return ret;
     }
 
-    @Override
-    public VertexNode getClosestVertex(Location location) {
-        ResultSet res;
-        // get stop location as a point
-        try (PreparedStatement statement = connection.prepareStatement(CLOSEST_VERTEX_BY_LOC)){
-            Point point = location.toPoint();
-            statement.setObject(1, new PGgeometry(point));
-
-            res = statement.executeQuery();
-
-            //if the location has been found, return a proxy object
-            if(res.next()) {
-                int id = res.getInt("id");
-                Point closest = (Point)(new PGgeometry(res.getObject("geom").toString())).getGeometry();
-                return new VertexNode(Location.fromPoint(closest), id);
-            }
-            else
-                throw new RuntimeException("Couldn't find vertex");
-        }
-        catch (SQLException ex){
-            throw new RuntimeException(ex);
-        }
-    }
 
 }

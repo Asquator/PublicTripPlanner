@@ -1,8 +1,9 @@
+/*
 package tests;
 
 import rfinder.dao.DefaultDAO;
-import rfinder.model.network.walking.ExtendedQueryGraph;
-import rfinder.model.network.walking.InMemoryNetworkGraph;
+import rfinder.pathfinding.ExtendedQueryGraph;
+import rfinder.pathfinding.InMemoryNetworkGraph;
 import rfinder.pathfinding.QueryPathFinder;
 import rfinder.query.*;
 import rfinder.structures.graph.RoutableGraph;
@@ -25,3 +26,4 @@ public class PFtest {
 
     }
 }
+*/

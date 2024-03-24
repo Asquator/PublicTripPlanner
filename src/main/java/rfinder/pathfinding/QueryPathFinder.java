@@ -1,37 +1,37 @@
 package rfinder.pathfinding;
 
-import rfinder.dao.DefaultFootpathDAO;
-import rfinder.dao.FootpathDAO;
 import rfinder.query.NodeLinkageResolver;
 import rfinder.query.QueryGraphInfo;
 import rfinder.query.QueryInfo;
-import rfinder.model.network.walking.ExtendedQueryGraph;
+import rfinder.structures.common.Location;
 import rfinder.structures.graph.RoutableGraph;
 import rfinder.structures.nodes.PathNode;
-import rfinder.structures.nodes.StopNode;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.OptionalDouble;
 
 public class QueryPathFinder {
 
-    private final GraphPathFinder<PathNode> graphPathFinder;
-
-    private final FootpathDAO footpathDAO = new DefaultFootpathDAO();
-
+    private final GraphPathFinder<PathNode, ShapedLink> graphPathFinder;
     private final ExtendedQueryGraph extendedGraph;
 
     private NodeLinkageResolver resolver = new NodeLinkageResolver();
     private final QueryGraphInfo graphInfo;
 
-    public QueryPathFinder(RoutableGraph<PathNode> originalGraph, QueryInfo queryInfo){
+    public QueryPathFinder(RoutableGraph<PathNode, ShapedLink> originalGraph, QueryInfo queryInfo){
         graphInfo = new QueryGraphInfo(queryInfo, new NodeLinkageResolver());
         extendedGraph = new ExtendedQueryGraph(originalGraph, graphInfo);
         graphPathFinder = new CachedAsPathFinder<>(extendedGraph,  new HaversineDistanceEvaluator(), queryInfo.walkRadius());
     }
 
-    public Path<PathNode> findPath(PathNode source, PathNode destination){
+    public FootPath<PathNode> findPath(PathNode source, PathNode destination){
         GraphPath<PathNode> graphPath = graphPathFinder.findPath(source, destination);
-        return new Path<>(graphPath.getPath(), graphPath.getLength());
+        if(graphPath == null)
+            return null;
+
+        return new FootPath<>(graphPath.path(), graphPath.length(), extractShape(graphPath));
     }
 
     public OptionalDouble pathCost(PathNode source, PathNode destination){
@@ -45,8 +45,28 @@ public class QueryPathFinder {
     public PathNode getDestinationRepr(){
         return graphInfo.destinationLinkage().closest();
     }
-    
-/*
+
+    public ExtendedQueryGraph getExtendedGraph() {
+        return extendedGraph;
+    }
+
+    private List<Location> extractShape(GraphPath<PathNode> graphPath) {
+        List<Location> shape = new ArrayList<>();
+        PathNode current, next;
+        ListIterator<? extends PathNode> nodeIterator = graphPath.path().listIterator();
+
+        current = nodeIterator.next();
+
+        while(nodeIterator.hasNext()){
+            next = nodeIterator.next();
+            shape.addAll(extendedGraph.getShape(current, next));
+            current = next;
+        }
+
+        return shape;
+    }
+
+    /*
 
     public Path<PathNode> findFromSource(StopNode destination) {
         GraphPath<PathNode> graphPath = graphPathFinder.findPath(extendedGraph.getSourceNode(), destination);

@@ -5,11 +5,10 @@ import rfinder.dao.StopLinkDAO;
 import rfinder.dao.RoadDAO;
 import rfinder.dao.StopDAO;
 
-import rfinder.model.network.walking.EdgeLinkage;
+import rfinder.pathfinding.EdgeLinkage;
 import rfinder.structures.common.Location;
 import rfinder.structures.nodes.NodeAdapterFactory;
 import rfinder.structures.nodes.NodeFactory;
-import rfinder.structures.nodes.PathNode;
 import rfinder.structures.nodes.StopNode;
 
 public class NodeLinkageResolver implements EdgeLinkageResolver {
@@ -27,7 +26,7 @@ public class NodeLinkageResolver implements EdgeLinkageResolver {
         Location location = null;
 
         if(point instanceof StopPoint sPoint)
-            return dao.getLinkage(stopDAO.getStopById(sPoint.stopId()), new NodeFactory<StopNode>() {
+            return dao.getLinkage(stopDAO.locById(sPoint.stopId()), new NodeFactory<StopNode>() {
                 @Override
                 public StopNode create(Location location) {
                     return new StopNode(location, sPoint.stopId());

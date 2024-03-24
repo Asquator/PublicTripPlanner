@@ -1,10 +1,11 @@
 package rfinder.structures.components;
 
+import rfinder.query.result.PathElement;
 import rfinder.structures.nodes.StopNode;
 
-public class NetworkTripLink extends PathLink {
-    public NetworkTripLink(StopNode destinationNode) {
-        super(destinationNode);
+public non-sealed class NetworkTripLink extends PathLink {
+    public NetworkTripLink(StopNode target) {
+        super(target);
     }
 
     @Override

@@ -23,6 +23,8 @@ public class DefaultRouteDAO implements RouteDAO{
 
     private static final String ALL_ROUTES = "select * from unique_routes where stop_id = ?";
 
+    private static final String ROUTE_SHAPE = "select * from route_shape(?, ?, ?, ?)";
+
     @Override
     public List<StopNode> getStops(RouteID routeID) {
         ResultSet res;
@@ -70,5 +72,30 @@ public class DefaultRouteDAO implements RouteDAO{
         }
 
         return ret;
+    }
+
+    @Override
+    public List<Location> getShapeAlongRoute(RouteID routeID, Location l1, Location l2) {
+       List<Location> ret = new ArrayList<>();
+       ResultSet res;
+
+       try(PreparedStatement statement = connection.prepareStatement(ROUTE_SHAPE)) {
+           statement.setString(1, routeID.routeId());
+           statement.setByte(2, routeID.direction());
+           statement.setObject(3, new PGgeometry(l1.toPoint()));
+           statement.setObject(4, new PGgeometry(l2.toPoint()));
+
+           res = statement.executeQuery();
+
+           while (res.next()) {
+               Point point = (Point)(new PGgeometry(res.getObject(1).toString())).getGeometry();
+               ret.add(Location.fromPoint(point));
+           }
+
+       } catch (SQLException e) {
+           throw new RuntimeException(e);
+       }
+
+       return ret;
     }
 }

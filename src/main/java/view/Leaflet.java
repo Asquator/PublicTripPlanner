@@ -21,7 +21,6 @@ import javafx.scene.layout.Background;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import lombok.NonNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -65,7 +64,7 @@ public class Leaflet extends Application {
         //set listener fo map events
         map.setMapListener(new OnJLMapViewListener() {
             @Override
-            public void mapLoadedSuccessfully(@NonNull JLMapView mapView) {
+            public void mapLoadedSuccessfully(JLMapView mapView) {
                 log.info("map loaded!");
                 addMultiPolyline(map);
                 addPolyline(map);

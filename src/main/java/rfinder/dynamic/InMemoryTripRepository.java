@@ -3,7 +3,6 @@ package rfinder.dynamic;
 import rfinder.dao.DBManager;
 import rfinder.structures.common.RouteID;
 import rfinder.structures.common.Trip;
-import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -14,18 +13,21 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-public class TripRepository implements TripRepositoryi {
+public class InMemoryTripRepository implements TripRepository {
 
-    private static final String STOP_TIMES = "select * from get_current_trips_format();";
-    private static final String TRIP_PATTERNS = "select * from trip_patterns;";
+    private static final String STOP_TIMES = "select * from get_current_trips_format()";
 
     private final HashMap<RouteID, List<TripInstance>> allTrips = new HashMap<>();
 
-    public HashMap<RouteID, List<TripInstance>> getAllTrips() {
-        return allTrips;
-    }
-
     private record RouteContext(RouteID routeID, List<TripInstance> trips){}
+
+    public InMemoryTripRepository()  {
+        try {
+            updateStopTimes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public List<TripInstance> getRelevantTrips(RouteID routeID){
@@ -100,7 +102,6 @@ public class TripRepository implements TripRepositoryi {
         do {
             routeID = res.getString("route_id");
             direction = res.getByte("direction_id");
-
             if(!routeID.equals(lastRouteID) || direction != lastDirection)
                 break;
 
@@ -110,4 +111,7 @@ public class TripRepository implements TripRepositoryi {
 
         return new RouteContext(new RouteID(lastRouteID, lastDirection), trips);
     }
+
+
+
 }

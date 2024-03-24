@@ -2,7 +2,7 @@ package rfinder.structures.graph;
 
 import java.util.Set;
 
-public interface RoutableGraph <T extends GraphNode> extends Graph<T>{
+public interface RoutableGraph <T extends GraphNode, L extends RouteLink<T>> extends Graph<T>{
     @Override
-    Set<RouteLink<T>> getLinks(T node);
+    Set<L> getLinks(T node);
 }

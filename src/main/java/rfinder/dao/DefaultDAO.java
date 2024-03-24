@@ -1,13 +1,13 @@
 package rfinder.dao;
 
 import net.postgis.jdbc.PGgeometry;
+import net.postgis.jdbc.geometry.MultiLineString;
 import net.postgis.jdbc.geometry.Point;
-import rfinder.model.network.walking.EdgeLinkage;
+import rfinder.pathfinding.EdgeLinkage;
+import rfinder.pathfinding.ShapedLink;
 import rfinder.structures.graph.RouteLink;
 import rfinder.structures.common.Location;
-import rfinder.structures.common.RouteID;
 import rfinder.structures.nodes.*;
-import rfinder.structures.components.RideLink;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,6 +19,9 @@ public class DefaultDAO implements RoadDAO {
     private Connection connection;
 
     private final StopDAO stopDAO = new StopLinkDAO();
+
+
+    public static final String ALL_EDGES = "select source, target, km, geom_source, geom_dest, geom_way from edge_map";
 
     private static final String CLOSEST_EDGE = "select * from get_closest_edge(?)";
 
@@ -48,15 +51,6 @@ public class DefaultDAO implements RoadDAO {
         }
     }
 
-    @Override
-    public VertexNode getClosestVertex(Location location) {
-        return null;
-    }
-
-    @Override
-    public VertexNode getClosestVertex(StopNode stopNode) {
-        return getClosestVertex(stopNode.getLocation());
-    }
 
     @Override
     public VertexNode getVertexByID(int vertexId) {
@@ -112,17 +106,26 @@ public class DefaultDAO implements RoadDAO {
         }
     }
 
-    public HashMap<PathNode, Set<RouteLink<PathNode>>> getFullRoadGraph(){
+    @SuppressWarnings("unchecked")
+    private static List<Location> geomToShape(MultiLineString lineString){
+        List<Location> ret = new ArrayList<>();
+        Arrays.stream(lineString.getLines()).forEach(l -> l.iterator().forEachRemaining(p -> ret.add(Location.fromPoint((Point)p))));
+
+        return ret;
+    }
+
+    public HashMap<PathNode, Set<ShapedLink>> getFullRoadGraph(){
         ResultSet res;
         // Get stop location as a point
-        try (PreparedStatement statement = connection.prepareStatement(PostgisQuery.ALL_EDGES)){
+        try (PreparedStatement statement = connection.prepareStatement(ALL_EDGES)){
             res = statement.executeQuery();
-            HashMap<PathNode, Set<RouteLink<PathNode>>> graph = new HashMap<>();
+            HashMap<PathNode, Set<ShapedLink>> graph = new HashMap<>();
 
             Map<Integer, VertexNode> nodes = new HashMap<>();
             VertexNode sourceNode, destNode;
             Location location;
-            Set<RouteLink<PathNode>> connections;
+            List<Location> shape;
+            Set<ShapedLink> connections;
 
             while(res.next()) {
                 double km = res.getDouble("km");
@@ -143,13 +146,16 @@ public class DefaultDAO implements RoadDAO {
                 destNode = nodes.getOrDefault(targetId, new VertexNode(location, targetId));
                 nodes.put(targetId, destNode);
 
+                // retrieve shape
+                shape = geomToShape((MultiLineString) new PGgeometry(res.getObject("geom_way").toString()).getGeometry());
+
                 // update links set in graph
                 connections = graph.getOrDefault(sourceNode, new HashSet<>());
-                connections.add(new RouteLink<>(destNode, km));
+                connections.add(new ShapedLink(destNode, km, shape));
                 graph.put(sourceNode, connections);
 
                 connections = graph.getOrDefault(destNode, new HashSet<>());
-                connections.add(new RouteLink<>(sourceNode, km));
+                connections.add(new ShapedLink(sourceNode, km, shape));
                 graph.put(destNode, connections);
 
             }
@@ -161,10 +167,13 @@ public class DefaultDAO implements RoadDAO {
         }
     }
 
-    public HashMap<PathNode, Set<RouteLink<PathNode>>> getFullNetworkGraph(){
-        HashMap<PathNode, Set<RouteLink<PathNode>>> fullGraph = getFullRoadGraph();
+    public HashMap<PathNode, Set<ShapedLink>> getFullNetworkGraph(){
 
         final double EXTENSION_FACTOR = 0.0005;
+        List<Location> sourceShape, targetShape;
+
+        HashMap<PathNode, Set<ShapedLink>> fullGraph = getFullRoadGraph();
+
 
         List<Map.Entry<Integer, EdgeLinkage>> linkedStops = stopDAO.getLinkedStops();
 
@@ -174,17 +183,20 @@ public class DefaultDAO implements RoadDAO {
             // closest stop is the one representing this stop, assume it lies on the edge
             StopNode stopNode = (StopNode) linkage.closest();
 
-            Set<RouteLink<PathNode>> stopConnections = new HashSet<>();
+            // set of graph links
+            Set<ShapedLink> stopConnections = new HashSet<>();
 
             fullGraph.put(stopNode, stopConnections);
+            sourceShape = List.of(stopEntry.getValue().closest().getLocation(), linkage.source().getLocation());
+            targetShape = List.of(stopEntry.getValue().closest().getLocation(), linkage.target().getLocation());
 
             //creating two edges from a stop to the closest edge's vertices
-            stopConnections.add(new RouteLink<>(linkage.source(), linkage.kmSource() + EXTENSION_FACTOR));
-            stopConnections.add(new RouteLink<>(linkage.target(), linkage.kmTarget() + EXTENSION_FACTOR));
+            stopConnections.add(new ShapedLink(linkage.source(), linkage.kmSource() + EXTENSION_FACTOR, sourceShape));
+            stopConnections.add(new ShapedLink(linkage.target(), linkage.kmTarget() + EXTENSION_FACTOR, sourceShape));
 
             // creating two edges pointing from the closest edge's vertices to the stop
-            fullGraph.getOrDefault(linkage.source(), new HashSet<>()).add(new RouteLink<>(stopNode, linkage.kmSource() + EXTENSION_FACTOR));
-            fullGraph.getOrDefault(linkage.target(), new HashSet<>()).add(new RouteLink<>(stopNode, linkage.kmTarget() + EXTENSION_FACTOR));
+            fullGraph.getOrDefault(linkage.source(), new HashSet<>()).add(new ShapedLink(stopNode, linkage.kmSource() + EXTENSION_FACTOR, targetShape));
+            fullGraph.getOrDefault(linkage.target(), new HashSet<>()).add(new ShapedLink(stopNode, linkage.kmTarget() + EXTENSION_FACTOR, targetShape));
         }
 
         return fullGraph;

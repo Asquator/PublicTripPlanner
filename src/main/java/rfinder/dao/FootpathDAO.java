@@ -12,5 +12,4 @@ public interface FootpathDAO {
 
     Set<StopNode> getFootPaths(StopNode stopNode, double radius);
 
-    VertexNode getClosestVertex(Location location);
 }

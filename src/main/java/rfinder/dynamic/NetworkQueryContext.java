@@ -1,9 +1,7 @@
 package rfinder.dynamic;
 
-import rfinder.structures.nodes.PathNode;
+import rfinder.pathfinding.QueryPathFinder;
 
-import java.util.Map;
-
-public record DynamicSearchContext(TripRepository trips, Map<PathNode, RoundNodeContext> labels) {
+public record NetworkQueryContext(QueryPathFinder pathFinder, TripRepository trips, LabelMap labels, MultilabelBag finalBag) {
 
 }

@@ -1,10 +1,15 @@
-package rfinder.structures.components;
+package rfinder.query.result;
 
-import rfinder.structures.nodes.PathNode;
+import rfinder.structures.common.Location;
 
-public class WalkSegment extends PathSegment{
-    public WalkSegment(PathNode sourceNode, PathNode destinationNode) {
-        super(sourceNode, destinationNode);
+import java.util.List;
+
+public class WalkSegment extends PathSegment implements PathElement{
+    public WalkSegment(NominalPathElement sourceNode, NominalPathElement destinationNode, List<Location> shape) {
+        super(sourceNode, destinationNode, shape);
     }
-
+    @Override
+    public List<Location> getShape() {
+        return null;
+    }
 }

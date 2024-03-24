@@ -36,23 +36,4 @@ public class DefaultContextRetriever implements ContextRetriever {
 
         return ret;
     }
-/*
-    @Override
-    public List<Trip> getRelevantTrips(StopNode stop, OffsetDateTime time){
-        List<Trip> ret = new ArrayList<>();
-        ResultSet res;
-
-        try (PreparedStatement statement = connection.prepareStatement(TRIP_PATTERNS)){
-            res = statement.executeQuery();
-
-            while (res.next()){
-                new Trip()
-            }
-        }
-        catch (SQLException ex){
-            throw new RuntimeException(ex);
-        }
-
-        return ret;
-    }*/
 }

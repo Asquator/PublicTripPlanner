@@ -70,8 +70,8 @@ public class Multilabel implements Cloneable{
     public boolean dominates(Multilabel other){
         for (int i = 0; i < labels.length; i++) {
 
-            // this dominates other iff labels[i] >= other.labels[i] for all i
-            if(labels[i].compareTo(other.labels[i]) < 0)
+            // this dominates other iff labels[i] > other.labels[i] for all i
+            if(labels[i].compareTo(other.labels[i]) <= 0)
                 return false;
         }
         

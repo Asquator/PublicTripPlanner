@@ -1,7 +1,5 @@
 package rfinder.query;
 
-import rfinder.query.result.StopElement;
-
 import java.util.Objects;
 
 public non-sealed class StopPoint implements QueryPoint  {

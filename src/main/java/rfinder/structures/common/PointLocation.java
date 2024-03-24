@@ -1,6 +1,8 @@
 package rfinder.structures.common;
 
 import net.postgis.jdbc.geometry.Point;
+import org.hibernate.annotations.Type;
+
 
 class PointLocation extends Location{
     private final Point point;

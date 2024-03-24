@@ -10,18 +10,19 @@ module rfinder {
     requires mapsforge.mapthemes.bridge;
     requires javafx.swing;
 
-    requires static lombok;
     requires jlmap;
     requires org.apache.logging.log4j;
     requires javafx.controls;
     requires org.postgresql.jdbc;
     requires net.postgis.jdbc.geometry;
     requires net.postgis.jdbc;
+    requires org.hibernate.orm.core;
+    requires spring.context;
 
     exports view;
     opens view to javafx.fxml;
     opens view.map to javafx.fxml;
-    exports rfinder.model.network.transport;
+
     exports rfinder.structures.common;
     exports rfinder.dao;
     exports rfinder.query;

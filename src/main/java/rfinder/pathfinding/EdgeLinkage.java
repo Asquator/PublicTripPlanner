@@ -1,6 +1,5 @@
-package rfinder.model.network.walking;
+package rfinder.pathfinding;
 
-import rfinder.structures.common.Location;
 import rfinder.structures.nodes.PathNode;
 import rfinder.structures.nodes.VertexNode;
 

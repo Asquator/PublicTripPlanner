@@ -1,8 +1,7 @@
-package rfinder.model.network.walking;
+package rfinder.pathfinding;
 
 import rfinder.dao.RoadDAO;
 import rfinder.structures.graph.RoutableGraph;
-import rfinder.structures.graph.RouteLink;
 import rfinder.structures.nodes.PathNode;
 
 import java.util.HashMap;

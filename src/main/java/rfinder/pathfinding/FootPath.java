@@ -1,15 +1,23 @@
 package rfinder.pathfinding;
 
+import rfinder.structures.common.Location;
+
 import java.util.List;
 import java.util.Objects;
 
-public class Path<T>{
+public class FootPath<T>{
     private final List<? extends T> path;
     private final double length;
+    private final List<Location> shape;
 
-    public Path(List<? extends T> path, double length) {
+    public FootPath(List<? extends T> path, double length, List<Location> shape) {
         this.path = path;
         this.length = length;
+        this.shape = shape;
+    }
+
+    public List<Location> getShape() {
+        return shape;
     }
 
     public List<? extends T> getPath() {
@@ -24,7 +32,7 @@ public class Path<T>{
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
-        var that = (Path) obj;
+        var that = (FootPath) obj;
         return Objects.equals(this.path, that.path) &&
                 Double.doubleToLongBits(this.length) == Double.doubleToLongBits(that.length);
     }

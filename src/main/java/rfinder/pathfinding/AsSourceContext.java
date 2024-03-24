@@ -7,15 +7,15 @@ import rfinder.structures.nodes.VertexNode;
 
 import java.util.*;
 
-public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T> {
-    private final RoutableGraph<T> graph;
+public class AsSourceContext<T extends GraphNode, L extends RouteLink<T>> implements SourcePathContext<T> {
+    private final RoutableGraph<T, L> graph;
     private final HeuristicEvaluator<T> heuristicEvaluator;
     private final Map<T, RoutingNode<T>> exploredSet = new HashMap<>();
     private final PriorityQueue<RoutingNode<T>> openSet = new PriorityQueue<>();
     private double maxPruningScore = Double.POSITIVE_INFINITY;
 
 
-    public AsSourceContext(RoutableGraph<T> graph, T source, HeuristicEvaluator<T> heuristicEvaluator) {
+    public AsSourceContext(RoutableGraph<T, L> graph, T source, HeuristicEvaluator<T> heuristicEvaluator) {
         this.graph = graph;
         this.heuristicEvaluator = heuristicEvaluator;
 
@@ -60,7 +60,7 @@ public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T
 
     /**
      * Accumulating A-star algorithm
-     *z
+     * 
      * @param destination target node
      * @return return value
      */
@@ -78,7 +78,7 @@ public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T
                 return true;
             }
 
-            Set<RouteLink<T>> connections;
+            Set<L> connections;
             connections = graph.getLinks(best.getCurrent());
             for (RouteLink<T> link : connections) {
                 T node = link.target();

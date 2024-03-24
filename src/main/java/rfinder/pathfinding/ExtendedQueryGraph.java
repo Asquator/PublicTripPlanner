@@ -1,4 +1,4 @@
-package rfinder.model.network.walking;
+package rfinder.pathfinding;
 
 import rfinder.query.QueryGraphInfo;
 import rfinder.structures.common.Location;

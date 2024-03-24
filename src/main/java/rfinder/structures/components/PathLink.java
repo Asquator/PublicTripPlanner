@@ -2,21 +2,22 @@ package rfinder.structures.components;
 
 import rfinder.structures.nodes.PathNode;
 
-public class PathLink implements Link<PathNode> {
+public abstract sealed class PathLink implements Link<PathNode> permits NetworkTripLink, WalkLink {
 
-    private final PathNode destinationNode;
+    private final PathNode target;
 
-    public PathLink(PathNode destinationNode){
-        this.destinationNode = destinationNode;
+
+    public PathLink(PathNode target){
+        this.target = target;
     }
 
     @Override
     public PathNode target() {
-        return destinationNode;
+        return target;
     }
 
     @Override
     public String toString() {
-        return destinationNode.toString();
+        return target.toString();
     }
 }

@@ -4,7 +4,14 @@ import rfinder.structures.components.WeightedLink;
 
 import java.util.Objects;
 
-public record RouteLink<T extends GraphNode>(T destination, double weight) implements WeightedLink<T> {
+public class RouteLink<T extends GraphNode> implements WeightedLink<T> {
+    private final T destination;
+    private final double weight;
+
+    public RouteLink(T destination, double weight) {
+        this.destination = destination;
+        this.weight = weight;
+    }
 
     @Override
     public String toString() {
@@ -30,4 +37,14 @@ public record RouteLink<T extends GraphNode>(T destination, double weight) imple
     public T target() {
         return destination;
     }
+
+    public T destination() {
+        return destination;
+    }
+
+    @Override
+    public double weight() {
+        return weight;
+    }
+
 }

@@ -1,36 +1,41 @@
 package rfinder.query.result;
 
+import rfinder.structures.common.Location;
 import rfinder.structures.common.RouteID;
 import rfinder.structures.nodes.StopNode;
 
-public class NetworkTripSegment extends PathSegment {
+import java.util.List;
+
+public class RideSegment extends PathSegment {
 
     private final RouteID routeID;
     private final int sourceSequence;
-    private final int destSequence;
 
+    private final List<Location> shape;
 
-    public NetworkTripSegment(StopNode sourceNode, StopNode destinationNode, RouteID routeID, int sourceSequence, int destSequence) {
-        super(sourceNode, destinationNode);
+    public RideSegment(StopView sourceStop, StopView destinationStop, RouteID routeID, int sourceSequence, List<Location> shape) {
+        super(sourceStop, destinationStop, shape);
         this.routeID = routeID;
         this.sourceSequence = sourceSequence;
-        this.destSequence = destSequence;
+        this.shape = shape;
     }
 
     @Override
-    public StopNode getSource() {
-        return (StopNode) super.getSource();
+    public StopView getSource() {
+        return (StopView) super.getSource();
     }
 
-    public StopNode target() {
-        return (StopNode) super.getDestination();
+    @Override
+    public StopView getDestination() {
+        return (StopView) super.getDestination();
     }
 
     public RouteID getRouteID() {
         return routeID;
     }
 
-    public int numOfStops(){
-        return destSequence - sourceSequence;
+    @Override
+    public List<Location> getShape() {
+        return shape;
     }
 }

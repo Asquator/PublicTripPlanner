@@ -1,5 +1,7 @@
 package rfinder.structures.nodes;
 
+import rfinder.query.result.NominalPathElement;
+import rfinder.query.result.PathElement;
 import rfinder.structures.common.Location;
 import rfinder.structures.graph.GraphNode;
 
@@ -9,7 +11,7 @@ public sealed class PathNode implements GraphNode<Integer> permits StopNode, Ver
     private Location location;
     private final int id;
 
-    public PathNode (Location location, int id){
+    public PathNode(Location location, int id){
         this.location = location;
         this.id = id;
     }
@@ -24,6 +26,10 @@ public sealed class PathNode implements GraphNode<Integer> permits StopNode, Ver
 
     public boolean isStop(){
         return this instanceof StopNode;
+    }
+
+    public NominalPathElement toElement(){
+        return new NominalPathElement(location);
     }
 
     @Override

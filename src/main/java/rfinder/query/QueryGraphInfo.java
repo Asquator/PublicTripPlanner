@@ -1,7 +1,6 @@
 package rfinder.query;
 
-import rfinder.model.network.walking.EdgeLinkage;
-import rfinder.structures.nodes.PathNode;
+import rfinder.pathfinding.EdgeLinkage;
 
 public record QueryGraphInfo(EdgeLinkage sourceLinkage, EdgeLinkage destinationLinkage, int maxTrips, double walkRadius) {
     public QueryGraphInfo(QueryInfo info, EdgeLinkageResolver resolver){

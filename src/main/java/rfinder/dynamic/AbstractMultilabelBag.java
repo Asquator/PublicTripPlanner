@@ -49,17 +49,21 @@ public class AbstractMultilabelBag<M extends Multilabel> implements Iterable<M>{
 
         while (iter.hasNext()){
             M current = iter.next();
-            if(multilabel.dominates(current)){
-                iter.remove();
+            if(current.dominates(multilabel)){
+                return false;
             }
 
-            else if(current.dominates(multilabel)){
-                return false;
+            else if(multilabel.dominates(current)){
+                iter.remove();
             }
         }
 
         multilabels.add(multilabel);
         return true;
+    }
+
+    public Optional<M> bestBy(ECriteria criteria){
+        return multilabels.stream().max(Comparator.comparing(label -> label.getLabel(criteria)));
     }
     
     @Override

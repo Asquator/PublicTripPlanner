@@ -5,15 +5,10 @@ import rfinder.structures.common.Location;
 import java.time.Duration;
 import java.util.List;
 
-public class NominalPathElement implements PathElement {
+public class NominalPathElement extends AbstractPathElement {
 
-    private final Location shape;
     public NominalPathElement(Location location){
-        shape = location;
+        super(List.of(location));
     }
 
-    @Override
-    public List<Location> getShape() {
-        return List.of(shape);
-    }
 }

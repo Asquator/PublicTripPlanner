@@ -1,6 +1,6 @@
 package rfinder.query;
 
-import rfinder.model.network.walking.EdgeLinkage;
+import rfinder.pathfinding.EdgeLinkage;
 
 public interface EdgeLinkageResolver {
     EdgeLinkage resolve(QueryPoint point);

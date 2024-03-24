@@ -19,8 +19,6 @@ public final class PostgisQuery {
             "from vertices v1, vertices v2 " +
             "where v1.id = ? and v2.id = ?";
 
-    public static final String ALL_EDGES = "select source, target, km, geom_source, geom_dest from edge_map";
-
 
     public static final String TRANSPORT_LINKS = "select * from transport_network where source_stop = ?";
 

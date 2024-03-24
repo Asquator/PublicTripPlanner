@@ -1,9 +1,7 @@
 package rfinder.pathfinding;
 
-import rfinder.pathfinding.HeuristicEvaluator;
 import rfinder.structures.common.Location;
 import rfinder.structures.nodes.PathNode;
-import rfinder.structures.nodes.VertexNode;
 
 public class HaversineDistanceEvaluator implements HeuristicEvaluator<PathNode> {
     @Override

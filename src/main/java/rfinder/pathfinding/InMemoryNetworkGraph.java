@@ -8,9 +8,9 @@ import rfinder.structures.nodes.PathNode;
 import java.util.HashMap;
 import java.util.Set;
 
-public class InMemoryNetworkGraph implements RoutableGraph<PathNode> {
+public class InMemoryNetworkGraph implements RoutableGraph<PathNode, ShapedLink> {
 
-    private final HashMap<PathNode, Set<RouteLink<PathNode>>> connections; // <node, links>
+    private final HashMap<PathNode, Set<ShapedLink>> connections; // <node, links>
 
     protected RoadDAO dao;
 
@@ -21,7 +21,7 @@ public class InMemoryNetworkGraph implements RoutableGraph<PathNode> {
     }
 
     @Override
-    public Set<RouteLink<PathNode>> getLinks(PathNode node) {
+    public Set<ShapedLink> getLinks(PathNode node) {
         return connections.get(node);
     }
 }

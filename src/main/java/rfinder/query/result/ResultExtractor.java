@@ -1,7 +1,11 @@
 package rfinder.query.result;
 
-import rfinder.dynamic.Multilabel;
+import rfinder.dynamic.MultilabelBag;
+import rfinder.dynamic.NetworkQueryContext;
+import rfinder.structures.nodes.PathNode;
 
-public interface ResultExtractor {
-    QueryResult extract(Multilabel multilabel);
+import java.util.Map;
+
+public interface ExtractionPolicy {
+    QueryResult extract(NetworkQueryContext queryContext);
 }

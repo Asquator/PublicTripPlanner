@@ -2,7 +2,7 @@ package rfinder.structures.components;
 
 import rfinder.structures.nodes.PathNode;
 
-public abstract class PathSegment  {
+public abstract class PathSegment {
     private final PathNode sourceNode;
     private final PathNode destinationNode;
 

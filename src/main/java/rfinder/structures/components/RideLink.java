@@ -3,54 +3,41 @@ package rfinder.structures.components;
 import rfinder.structures.common.RouteID;
 import rfinder.structures.nodes.StopNode;
 
-import java.util.Objects;
+public class TripSequentialLink extends NetworkTripLink{
 
-public class RideLink extends NetworkTripLink {
-
+    private final int tripSequence;
     private final RouteID routeID;
     private final int sourceSequence;
-    private final int destinationSequence;
-    private double distance;
+    private final int destSequence;
 
-    public RideLink(StopNode destinationNode, RouteID routeID, int sourceSequence, int destinationSequence, double distance) {
-        super(destinationNode);
+    public TripSequentialLink(StopNode sourceNode, RouteID routeID, int tripSequence, int sourceSequence, int destSequence) {
+        super(sourceNode);
         this.routeID = routeID;
+        this.tripSequence = tripSequence;
         this.sourceSequence = sourceSequence;
-        this.destinationSequence = destinationSequence;
-        this.distance = distance;
+        this.destSequence = destSequence;
     }
 
-    public RouteID getTripPatternID() {
+    public int getTripSequence() {
+        return tripSequence;
+    }
+
+    public RouteID getRouteID() {
         return routeID;
+    }
+
+    public int getDestSequence() {
+        return destSequence;
     }
 
     public int getSourceSequence() {
         return sourceSequence;
     }
 
-
-    public double getDistance() {
-        return distance;
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RideLink rideLink = (RideLink) o;
-        return sourceSequence == rideLink.sourceSequence &&
-                destinationSequence == rideLink.destinationSequence &&
-                Objects.equals(routeID, rideLink.routeID);
-    }
-
     @Override
     public String toString() {
-        return super.toString() + routeID;
+        return super.toString() +"TripSequentialLink{" +
+                "tripSequence=" + tripSequence +
+                '}';
     }
 }

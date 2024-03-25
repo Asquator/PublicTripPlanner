@@ -42,16 +42,4 @@ public class TimeMinLabel extends Label{
                 '}';
     }
 
-    @Override
-    public Label clone() {
-        TimeMinLabel label = null;
-        try {
-            label = (TimeMinLabel) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError(e);
-        }
-
-        label.timestamp = timestamp.withNano(0);
-        return label;
-    }
 }

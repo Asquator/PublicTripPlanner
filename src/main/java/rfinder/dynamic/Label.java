@@ -1,8 +1,6 @@
 package rfinder.dynamic;
 
 
-import rfinder.structures.components.PathLink;
-
 public abstract class Label implements Comparable<Label>, Cloneable {
 
     @Override

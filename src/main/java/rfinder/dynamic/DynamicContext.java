@@ -54,7 +54,7 @@ public class DynamicContext {
         private final RouteID routeID;
         private int stopSequence;
         private RouteMultilabelBag routeBag = new RouteMultilabelBag();
-        private List<RoundNodeContext> currentRouteStops;
+        private final List<RoundNodeContext> currentRouteStops;
 
         private int tripLow, tripHigh;
 
@@ -332,29 +332,19 @@ public class DynamicContext {
             }
 
             // copy the source bag
-            MultilabelBag sourceBag = new MultilabelBag(sourceStop.getRoundLabels()[inputRound]);
+            MultilabelBag transferBag = new MultilabelBag(sourceStop.getRoundLabels()[inputRound]);
 
             // update arrival time and walking distance
-            for (Multilabel multilabel : sourceBag) {
-                TimeMinLabel timeLabel = (TimeMinLabel) multilabel.getLabel(ECriteria.ARRIVAL_TIME);
-                timeLabel.setTimestamp(timeLabel.getTimestamp().plus(Converters.kmToDuration(pathCost.getAsDouble())));
+            for (Multilabel multilabel : transferBag)
+                FootpathUpdatePolicy.getInstance().update(multilabel, pathCost.getAsDouble(), new WalkLink(stop));
 
-                DoubleMinLabel walkLabel = (DoubleMinLabel) multilabel.getLabel(ECriteria.WALKING_KM);
-                walkLabel.setCost(walkLabel.getCost() + pathCost.getAsDouble());
-                multilabel.setBackwardLink(new WalkLink(stop));
-            }
 
-            targetBag.addAll(sourceBag);
+            targetBag.addAll(transferBag);
         }
 
         return targetBag;
     }
 
-    private void processForwardFootpaths(){
-        for (StopNode markedStop : lastRoundMarkedStops) {
-            processFootpathsFrom(markedStop, labelRepo.get(markedStop).getRoundLabels()[currentRound - 1], currentRound);
-        }
-    }
 
     private void processFootpathsFrom(PathNode from, MultilabelBag sourceBag, int outputRound) {
         Set<StopNode> footPaths = getFootPaths(from);
@@ -378,14 +368,8 @@ public class DynamicContext {
             MultilabelBag tempBag = new MultilabelBag(sourceBag);
 
             // update arrival time and walking distance
-            for (Multilabel multilabel : tempBag) {
-                TimeMinLabel timeLabel = (TimeMinLabel) multilabel.getLabel(ECriteria.ARRIVAL_TIME);
-                timeLabel.setTimestamp(timeLabel.getTimestamp().plus(Converters.kmToDuration(pathCost.getAsDouble())));
-
-                DoubleMinLabel walkLabel = (DoubleMinLabel) multilabel.getLabel(ECriteria.WALKING_KM);
-                walkLabel.setCost(walkLabel.getCost() + pathCost.getAsDouble());
-                multilabel.setBackwardLink(backwardLink);
-            }
+            for (Multilabel multilabel : tempBag)
+                FootpathUpdatePolicy.getInstance().update(multilabel, pathCost.getAsDouble(), backwardLink);
 
             // merge the temporary bag into the existing one
             MultilabelBag roundBag = targetStop.getRoundLabels()[outputRound];
@@ -398,6 +382,12 @@ public class DynamicContext {
 
         }
 
+    }
+
+    private void processForwardFootpaths(){
+        for (StopNode markedStop : lastRoundMarkedStops) {
+            processFootpathsFrom(markedStop, labelRepo.get(markedStop).getRoundLabels()[currentRound - 1], currentRound);
+        }
     }
 
 }

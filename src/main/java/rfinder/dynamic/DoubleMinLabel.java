@@ -28,13 +28,5 @@ class DoubleMinLabel extends Label {
                 '}';
     }
 
-    @Override
-    public Label clone()  {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError(e);
-        }
-    }
 }
 

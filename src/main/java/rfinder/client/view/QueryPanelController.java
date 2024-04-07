@@ -6,6 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import org.mapsforge.core.model.LatLong;
+import rfinder.structures.common.Location;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Objects;
 
-public final class SidePanelController {
+public final class QueryPanelController {
 
     @FXML
     private Spinner<Integer> minutesSpinner;
@@ -74,6 +75,14 @@ public final class SidePanelController {
         hoursSpinner.getStyleClass().add(Spinner.STYLE_CLASS_SPLIT_ARROWS_VERTICAL);
     }
 
+    public Location sourceLocation(){
+        return Location.fromValues(Double.parseDouble(sourceField.getText().split(",")[0]), Double.parseDouble(sourceField.getText().split(",")[1]));
+    }
+
+    public Location destinationLocation(){
+        return Location.fromValues(Double.parseDouble(destinationField.getText().split(",")[0]), Double.parseDouble(destinationField.getText().split(",")[1]));
+    }
+
     public TextField getSourceField() {
         return sourceField;
     }
@@ -92,10 +101,10 @@ public final class SidePanelController {
 
 
     public void timestampChanged(){
-        System.out.println(parseTimestamp());
+        System.out.println(getTimestamp());
     }
 
-    private LocalDateTime parseTimestamp(){
+    public LocalDateTime getTimestamp(){
         return LocalDateTime.of(datePicker.getValue(), LocalTime.of(hoursSpinner.getValue(), minutesSpinner.getValue()));
     }
 }

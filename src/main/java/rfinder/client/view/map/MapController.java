@@ -16,7 +16,6 @@ import org.mapsforge.core.model.MapPosition;
 import org.mapsforge.core.model.Point;
 import org.mapsforge.core.util.LatLongUtils;
 import org.mapsforge.core.util.Parameters;
-import org.mapsforge.core.util.Utils;
 import org.mapsforge.map.awt.graphics.AwtBitmap;
 import org.mapsforge.map.awt.graphics.AwtGraphicFactory;
 import org.mapsforge.map.awt.util.AwtUtil;
@@ -42,7 +41,9 @@ import org.mapsforge.map.model.Model;
 import org.mapsforge.map.model.common.PreferencesFacade;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.InternalRenderTheme;
-import view.SidePanelController;
+import rfinder.query.LocationPoint;
+import rfinder.query.QueryInfo;
+import view.QueryPanelController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,6 +51,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -64,12 +69,12 @@ public final class MapController extends JFrame {
     private static final String TITLE = "Confirm close";
     private final MapView mapView = createMapView();
 
-    private Marker sourceMarker = new Marker(new LatLong(0,0),sourceBitmap,0,0);
+    private Marker sourceMarker = new Marker(new LatLong(0,0), sourceMarkerBitmap,0,0);
     private Marker destinationMarker = new Marker(new LatLong(0,0),destMarkerBitmap,0,0);
     private static Bitmap destMarkerBitmap;
-    private static Bitmap sourceBitmap;
+    private static Bitmap sourceMarkerBitmap;
 
-    private SidePanelController sidePanelController;
+    private QueryPanelController queryPanelController;
 
     private static final int MARKER_SIZE = 20;
 
@@ -81,8 +86,8 @@ public final class MapController extends JFrame {
             destMarkerBitmap = new AwtBitmap(Objects.requireNonNull(MapController.class.getResourceAsStream("marker.png")));
             destMarkerBitmap.scaleTo(MARKER_SIZE, MARKER_SIZE);
 
-            sourceBitmap = new AwtBitmap(Objects.requireNonNull(MapController.class.getResourceAsStream("marker_blue.png")));
-            sourceBitmap.scaleTo(MARKER_SIZE, MARKER_SIZE);
+            sourceMarkerBitmap = new AwtBitmap(Objects.requireNonNull(MapController.class.getResourceAsStream("marker_blue.png")));
+            sourceMarkerBitmap.scaleTo(MARKER_SIZE, MARKER_SIZE);
 
         } catch (Exception e){
             System.out.println(e.getMessage());
@@ -128,14 +133,14 @@ public final class MapController extends JFrame {
     }
 
     private void initWindow(BoundingBox boundingBox) {
-        FXMLLoader fxmlLoader = new FXMLLoader(SidePanelController.class.getResource("side_panel.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(QueryPanelController.class.getResource("side_panel.fxml"));
 
         final JFrame frame = new JFrame();
-        sidePanelController = new SidePanelController();
+        queryPanelController = new QueryPanelController();
 
         // set loader controller, load and initialize the side pane
         Platform.startup(()->{
-            fxmlLoader.setController(sidePanelController);
+            fxmlLoader.setController(queryPanelController);
             Scene sidePanelJFXScene;
 
             JFXPanel jfxPanel = new JFXPanel();
@@ -150,14 +155,14 @@ public final class MapController extends JFrame {
                 System.err.println("Could not open map window\n" + exception.getMessage());
             }
 
-            sidePanelController.getDestinationField().focusedProperty().addListener(new ChangeListener<Boolean>() {
+            queryPanelController.getDestinationField().focusedProperty().addListener(new ChangeListener<Boolean>() {
                 @Override
                 public void changed(ObservableValue<? extends Boolean> observableValue, Boolean oldVal, Boolean newVal) {
                     pointSelectionModel.select(newVal ? PointSelectionModel.SelectionPoint.DESTINATION : PointSelectionModel.SelectionPoint.SOURCE);
                 }
             });
 
-            sidePanelController.getSourceField().focusedProperty().addListener(new ChangeListener<Boolean>() {
+            queryPanelController.getSourceField().focusedProperty().addListener(new ChangeListener<Boolean>() {
                 @Override
                 public void changed(ObservableValue<? extends Boolean> observableValue, Boolean oldVal, Boolean newVal) {
                     pointSelectionModel.select(newVal ? PointSelectionModel.SelectionPoint.SOURCE : PointSelectionModel.SelectionPoint.DESTINATION);
@@ -211,6 +216,13 @@ public final class MapController extends JFrame {
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private QueryInfo createQuery(){
+        LocalDateTime timestamp = queryPanelController.getTimestamp();
+        
+        return new QueryInfo(new LocationPoint(queryPanelController.sourceLocation()), new LocationPoint(queryPanelController.destinationLocation()),
+                OffsetDateTime.of(queryPanelController.getTimestamp(), ZoneId.systemDefault().getRules().getOffset(timestamp)),3, 1.0);
     }
 
     private BoundingBox addLayers(MapView mapView, List<File> mapFiles, HillsRenderConfig hillsRenderConfig)  {
@@ -301,10 +313,10 @@ public final class MapController extends JFrame {
 
     private void handleNewSource(LatLong tapLatLong) {
         mapView.getLayerManager().getLayers().remove(sourceMarker);
-        sourceMarker = new Marker(tapLatLong, sourceBitmap, 0, 0);
+        sourceMarker = new Marker(tapLatLong, sourceMarkerBitmap, 0, 0);
         mapView.getLayerManager().getLayers().add(sourceMarker);
         Platform.runLater(()->{
-            sidePanelController.setSourcePoint(tapLatLong);
+            queryPanelController.setSourcePoint(tapLatLong);
         });
     }
 
@@ -313,8 +325,9 @@ public final class MapController extends JFrame {
         destinationMarker = new Marker(tapLatLong, destMarkerBitmap, 0, 0);
         mapView.getLayerManager().getLayers().add(destinationMarker);
         Platform.runLater(()->{
-            sidePanelController.setDestinationPoint(tapLatLong);
+            queryPanelController.setDestinationPoint(tapLatLong);
         });
+
     }
 
 

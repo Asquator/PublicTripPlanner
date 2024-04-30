@@ -1,6 +1,6 @@
 package rfinder.structures.graph;
 
-import rfinder.structures.components.WeightedLink;
+import rfinder.structures.links.WeightedLink;
 
 import java.util.Objects;
 
@@ -35,10 +35,6 @@ public class RouteLink<T extends GraphNode> implements WeightedLink<T> {
 
     @Override
     public T target() {
-        return destination;
-    }
-
-    public T destination() {
         return destination;
     }
 

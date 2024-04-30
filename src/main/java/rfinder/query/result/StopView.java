@@ -22,4 +22,8 @@ public class StopView extends NominalPathElement{
         return stopId;
     }
 
+    @Override
+    public String toString() {
+        return name.toUpperCase();
+    }
 }

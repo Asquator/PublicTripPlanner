@@ -1,60 +1,49 @@
 package rfinder.dynamic;
 
-import rfinder.dao.*;
-import rfinder.pathfinding.ExtendedQueryGraph;
-import rfinder.pathfinding.ShapedLink;
-import rfinder.pathfinding.QueryPathFinder;
-import rfinder.query.NodeLinkageResolver;
+import rfinder.dao.ContextRetriever;
+import rfinder.dao.FootpathDAO;
+import rfinder.dao.RouteDAO;
+import rfinder.dynamic.label.*;
+import rfinder.pathfinding.QueryFootpathManager;
+import rfinder.query.QueryContext;
 import rfinder.query.QueryGraphInfo;
 import rfinder.query.QueryInfo;
 import rfinder.structures.common.RouteID;
-import rfinder.structures.components.RideLink;
-import rfinder.structures.components.WalkLink;
-import rfinder.structures.graph.RoutableGraph;
+import rfinder.structures.links.RideLink;
+import rfinder.structures.links.WalkLink;
 import rfinder.structures.nodes.PathNode;
 import rfinder.structures.nodes.StopNode;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class DynamicContext {
+    private Supplier<? extends MultilabelBag> bagSupplier;
+
     private Set<StopNode> markedStops;
     private Set<StopNode> lastRoundMarkedStops;
-    private HashMap<RouteID, List<RoundNodeContext>> routeStops;
-    private final Map<PathNode, RoundNodeContext> labelRepo = new HashMap<>();
+    private Set<StopNode> markedIsolatedStops;
+    private Set<StopNode> lastRoundIsolatedStops;
 
-    public class RoundContextSelector implements LabelMap{
-        private int round;
-
-        public RoundContextSelector(int round){
-            this.round = round;
-        }
-
-        public void changeRound(int round){
-            this.round = round;
-        }
-
-        @Override
-        public MultilabelBag getLabelBag(PathNode node) {
-            return labelRepo.get(node).getRoundLabels()[round];
-        }
-    }
-
-    private QueryPathFinder pathFinder;
+    private HashMap<RouteID, List<RoundNodeContext<?>>> routeStops;
+    private final Map<PathNode, RoundNodeContext<?>> labelRepo = new HashMap<>();
+    private QueryContext queryContext;
+    private QueryFootpathManager pathFinder;
     private final RouteDAO routeDAO;
     private final FootpathDAO footPathRepo;
     private final ContextRetriever contextRetriever;
-    private final TripRepository tripRepository = new InMemoryTripRepository();
-    private QueryInfo queryInfo;
+
     private int currentRound = 0;
 
     private class RouteScanner {
         private final List<TripInstance> routeTrips;
         private final RouteID routeID;
         private int stopSequence;
-        private RouteMultilabelBag routeBag = new RouteMultilabelBag();
-        private final List<RoundNodeContext> currentRouteStops;
+        private final MultilabelBag routeBag = bagSupplier.get();
+        private final List<RoundNodeContext<?>> currentRouteStops;
 
         private int tripLow, tripHigh;
 
@@ -63,15 +52,14 @@ public class DynamicContext {
             this.routeID = routeID;
 
             currentRouteStops = routeStops.get(routeID);
-            routeTrips = tripRepository.getRelevantTrips(routeID);
+            routeTrips = queryContext.tripRepository().getRelevantTrips(routeID);
 
             tripLow = routeTrips.size() - 1;
             tripHigh = 0;
         }
 
         public void processRoute() {
-            MultilabelBag stopBag;
-            OffsetDateTime arrivalTime;
+            LocalDateTime arrivalTime;
             int tripSequence;
 
             if(routeTrips.isEmpty())
@@ -79,55 +67,68 @@ public class DynamicContext {
 
             while (stopSequence < currentRouteStops.size()) {
 
-                RoundNodeContext stopContext = currentRouteStops.get(stopSequence);
-                stopBag = stopContext.getRoundLabels()[currentRound];
+                RoundNodeContext<?> stopContext = currentRouteStops.get(stopSequence);
+                boolean improved = false;
 
-                for(RouteMultilabel label : routeBag){
-
+                for(Multilabel label : routeBag){
+                    boolean localImproved;
                     // get current trip for label
-                    tripSequence = label.getTripSequence();
+                    tripSequence = ((RideLink)label.getBackwardLink()).getTripSequence();
 
                     // update arrival time for label
                     arrivalTime = routeTrips.get(tripSequence).stopTimes().get(stopSequence);
                     label.setArrivalTime(arrivalTime);
-                }
 
-                // merge the route bag into the current stop bag
-                boolean improved = stopBag.mergeRouteBag(routeBag);
+                    Multilabel cloned = new Multilabel(label);
+
+                    final long EXTENSION_DURATION_SEC = 60;
+
+                    cloned.setArrivalTime(arrivalTime.plusSeconds(EXTENSION_DURATION_SEC));
+
+                    localImproved = stopContext.addToCurrentRoundBag(cloned);
+
+                    if(localImproved)
+                        ((RideLink)cloned.getBackwardLink()).setDestSequence(stopSequence);
+
+                    improved = improved || localImproved;
+                }
 
                 if(improved)
                     markedStops.add((StopNode) stopContext.getPathNode());
 
                 // merge the previous round bag into the sliding route bag
-                mergeIntoRouteBag(stopContext.getRoundLabels()[currentRound - 1]);
+                mergeIntoRouteBag(stopContext);
 
                 stopSequence++;
             }
         }
 
-        private void mergeIntoRouteBag(MultilabelBag bag){
-            int earliestTripSequence;
+        private void mergeIntoRouteBag(RoundNodeContext<?> context){
+           final long LOCAL_PRUNE_SEC = 5000L;
 
-            for(Multilabel label : bag){
-                OffsetDateTime arrivalTime = label.getArrivalTime();
+            Stream.concat(context.getLastRoundList().stream(), context.getLastIsolatedList().stream()).forEach(
+                label -> {
+                    LocalDateTime arrivalTime = label.getArrivalTime();
 
-                earliestTripSequence = findEarliestTripIndex(arrivalTime);
+                    int earliestTrip = findEarliestTripIndex(arrivalTime);
 
-                if(earliestTripSequence >= 0) {
-                    // add waiting duration to the corresponding label
-                    OffsetDateTime departureTime = routeTrips.get(earliestTripSequence).stopTimes().get(stopSequence);
+                    if(earliestTrip >= 0) {
+                        LocalDateTime departureTime = routeTrips.get(earliestTrip).stopTimes().get(stopSequence);
 
-                    RouteMultilabel newLabel = new RouteMultilabel(label,
-                            new RideLink((StopNode) currentRouteStops.get(stopSequence).getPathNode(), routeID, earliestTripSequence, stopSequence));
+                        if(departureTime.isAfter(arrivalTime.plusSeconds(LOCAL_PRUNE_SEC)))
+                            return;
 
-                    DurationMinLabel durationLabel = (DurationMinLabel) newLabel.getLabel(ECriteria.WAITING_TIME);
-                    durationLabel.addDuration(Duration.between(arrivalTime, departureTime));
-                    routeBag.add(newLabel);
-                }
-            }
+                        Multilabel newLabel = new Multilabel(label);
+                        newLabel.update(new RouteBagUpdate(), departureTime);
+
+                        if(routeBag.addEliminate(newLabel))
+                            newLabel.setBackwardLink(new RideLink((StopNode) currentRouteStops.get(stopSequence).getPathNode(), stopSequence, routeID, earliestTrip, label));
+
+                    }
+                });
         }
 
-        private int findEarliestTripIndex(OffsetDateTime minTime){
+        private int findEarliestTripIndex(LocalDateTime minTime){
             int res = findEarliestTripIndex(minTime, tripLow, tripHigh);
 
             if(res != -1) {
@@ -145,7 +146,7 @@ public class DynamicContext {
         }
 
 
-        private int findEarliestTripIndex(OffsetDateTime minTime, int low, int high){
+        private int findEarliestTripIndex(LocalDateTime minTime, int low, int high){
             // binary search for earliest trip for the given stop across columns of stopTimes
              int mid;
              int result = -1;
@@ -168,36 +169,45 @@ public class DynamicContext {
     }
 
     public DynamicContext(ContextRetriever contextRetriever, RouteDAO routeDAO, FootpathDAO footpathDAO){
-
         this.contextRetriever = contextRetriever;
         this.routeDAO = routeDAO;
         this.footPathRepo = footpathDAO;
     }
 
-    public HashMap<RouteID, List<RoundNodeContext>> getRouteStops() {
-        return routeStops;
-    }
 
-    public void initializeStorage(RoutableGraph<PathNode, ShapedLink> baseGraph, QueryInfo queryInfo){
-        this.queryInfo = queryInfo;
+    public <M extends Multilabel, B extends MultilabelBag> void initializeStorage(Class<B> bagClass, QueryContext queryContext)  {
+        Supplier<B> bagSupplier = () -> {
+            try {
+                return (B) bagClass.getConstructor().newInstance();
+            } catch (Exception ex) {
+                throw new RuntimeException("Couldn't retrieve multilabel bag constructor", ex);
+            }
+        };
+
+        this.bagSupplier = bagSupplier;
+        this.pathFinder = queryContext.pathFinder();
+        this.queryContext = queryContext;
 
         routeStops = new HashMap<>();
+
         markedStops = new HashSet<>();
         lastRoundMarkedStops = new HashSet<>();
+        markedIsolatedStops = new HashSet<>();
+        lastRoundIsolatedStops = new HashSet<>();
+
+
+        QueryInfo queryInfo = queryContext.queryInfo();
+        QueryGraphInfo queryGraphInfo = queryContext.queryGraphInfo();
 
         Set<RouteID> relevantRoutes = contextRetriever.getRelevantRoutes(queryInfo);
-        ExtendedQueryGraph qgraph = new ExtendedQueryGraph(baseGraph, new QueryGraphInfo(queryInfo, new NodeLinkageResolver()));
 
         for(RouteID routeID : relevantRoutes){
             List<StopNode> stopList = routeDAO.getStops(routeID);
-            List<RoundNodeContext> roundNodeContextList = routeStops.getOrDefault(routeID, new ArrayList<>());
+            List<RoundNodeContext<?>> roundNodeContextList = routeStops.getOrDefault(routeID, new ArrayList<>());
 
             for(StopNode stop : stopList){
                 // retrieve stop if already exists
-                RoundNodeContext roundNodeContext = labelRepo.getOrDefault(stop, new RoundNodeContext(stop, queryInfo.maxTrips() + 1));
-
-                // initialize first iteration bag
-                roundNodeContext.getRoundLabels()[currentRound] = new MultilabelBag();
+                RoundNodeContext<?> roundNodeContext = labelRepo.getOrDefault(stop, new RoundNodeContext<B>(stop, bagSupplier));
 
                 roundNodeContextList.add(roundNodeContext);
 
@@ -208,11 +218,28 @@ public class DynamicContext {
             routeStops.put(routeID, roundNodeContextList);
         }
 
-        pathFinder = new QueryPathFinder(qgraph, queryInfo);
+        RoundNodeContext<?> context;
 
+        Multilabel trivialLabel = new Multilabel();
+        trivialLabel.setArrivalTime(queryInfo.departureTime());
 
-        if(pathFinder.getSourceRepr() instanceof StopNode stopNode)
+        if(queryGraphInfo.sourceRepr() instanceof StopNode stopNode) {
             lastRoundMarkedStops.add(stopNode);
+            context = labelRepo.get(stopNode);
+        }
+
+        else {
+            context = new RoundNodeContext<B>(queryGraphInfo.sourceRepr(), bagSupplier);
+            labelRepo.put(queryGraphInfo.sourceRepr(), context);
+        }
+
+        context.addToCurrentRoundBag(trivialLabel);
+
+        if(!queryGraphInfo.destinationRepr().isStop()){
+
+            context = new RoundNodeContext<B>(queryGraphInfo.destinationRepr(), bagSupplier);
+            labelRepo.put(queryGraphInfo.destinationRepr(), context);
+        }
 
     }
 
@@ -220,73 +247,64 @@ public class DynamicContext {
         currentRound++;
 
         // last round, no storage expansion
-        if(currentRound > queryInfo.maxTrips())
+        if(currentRound > queryContext.queryInfo().maxTrips())
             return;
 
         lastRoundMarkedStops = markedStops;
-        markedStops = new HashSet<>();
+        lastRoundIsolatedStops = markedIsolatedStops;
 
-        for(RoundNodeContext roundNodeContext : labelRepo.values()){
-            MultilabelBag[] roundLabels = roundNodeContext.getRoundLabels();
-            roundLabels[currentRound] = new MultilabelBag(roundLabels[currentRound - 1]);
-        }
+        markedStops = new HashSet<>();
+        markedIsolatedStops = new HashSet<>();
+
+        Stream.concat(lastRoundIsolatedStops.stream(), lastRoundMarkedStops.stream()).forEach(stopNode -> {
+            RoundNodeContext<?> roundNodeContext = labelRepo.get(stopNode);
+            roundNodeContext.step(bagSupplier);
+        });
     }
 
     public NetworkQueryContext compute(){
-        MultilabelBag initialBag, finalBag;
         RouteScanner scanner;
-        RoundNodeContext context;
 
-        if(pathFinder.getSourceRepr() instanceof StopNode stopNode) {
-            initialBag = labelRepo.get(stopNode).getRoundLabels()[0];
-        }
-
-        else {
-            context = new RoundNodeContext(pathFinder.getSourceRepr(), queryInfo.maxTrips() + 1);
-            initialBag = context.getRoundLabels()[0];
-            labelRepo.put(pathFinder.getSourceRepr(), context);
-        }
-
-        Multilabel trivialLabel = new Multilabel();
-        trivialLabel.setArrivalTime(queryInfo.departureTime());
-        initialBag.add(trivialLabel);
-
-        if(pathFinder.getDestinationRepr() instanceof StopNode stopNode)
-            finalBag = labelRepo.get(stopNode).getRoundLabels()[0];
-
-        else {
-            context = new RoundNodeContext(pathFinder.getDestinationRepr(), queryInfo.maxTrips() + 1);
-            finalBag = context.getRoundLabels()[0];
-            labelRepo.put(pathFinder.getDestinationRepr(), context);
-        }
-
-
-        processFootpathsFrom(pathFinder.getSourceRepr(), initialBag, 0);
+        processFootpathsFrom(queryContext.queryGraphInfo().sourceRepr());
+        MultilabelBag finalBag;
 
         initNextRound();
 
-        while(currentRound < queryInfo.maxTrips() + 1){
+        long time;
 
+        while(currentRound < queryContext.queryInfo().maxTrips() + 1){
+
+
+            System.out.println("collecting routes");
+
+            time = System.currentTimeMillis();
             Map<RouteID, Integer> relevantRoutes = collectRelevantRoutes(); // <route_id, stop_sequence>
+            System.out.println("time: " + (System.currentTimeMillis() - time) + "\n");
 
             System.out.println(currentRound + " round started, processing routes");
+            time = System.currentTimeMillis();
             for(RouteID routeID : relevantRoutes.keySet()){
                 scanner = new RouteScanner(routeID, relevantRoutes.get(routeID));
                 scanner.processRoute();
             }
+            System.out.println("time: " + (System.currentTimeMillis() - time)+ "\n");
 
+            System.out.println("footpaths  " + markedStops.size());
 
-            System.out.println("footpaths  " + lastRoundMarkedStops.size());
-            if(currentRound < queryInfo.maxTrips())
+            time = System.currentTimeMillis();
+            if(currentRound < queryContext.queryInfo().maxTrips())
                 processForwardFootpaths();
 
             else
-                System.out.println(assemblyFootpaths(pathFinder.getDestinationRepr(), finalBag, currentRound));
+                assemblyFootpaths(queryContext.queryGraphInfo().destinationRepr());
+
+            System.out.println("time: " + (System.currentTimeMillis() - time)+ "\n");
 
             initNextRound();
         }
 
-        return new NetworkQueryContext(pathFinder, tripRepository, new RoundContextSelector(currentRound-1), finalBag);
+        finalBag = labelRepo.get(queryContext.queryGraphInfo().destinationRepr()).getBestBag();
+        return new NetworkQueryContext(queryContext, routeDAO, finalBag);
     }
 
 
@@ -294,8 +312,8 @@ public class DynamicContext {
     private Map<RouteID, Integer> collectRelevantRoutes() {
         Map<RouteID, Integer> relevantRoutes = new HashMap<>();
 
-        for (StopNode stopNode : lastRoundMarkedStops) {
-            for (Map.Entry<RouteID, Integer> stopInRoute : routeDAO.getRoutes(stopNode)) {
+        Stream.concat(lastRoundIsolatedStops.stream(), lastRoundMarkedStops.stream()).forEach(stopNode -> {
+            for (Map.Entry<RouteID, Integer> stopInRoute : queryContext.stopStorage().getRoutes(stopNode)) {
 
                 // if stopNode comes earlier than current stop in the given route, save the earliest stop in the route
                 int seq = relevantRoutes.getOrDefault(stopInRoute.getKey(), Integer.MAX_VALUE);
@@ -303,91 +321,68 @@ public class DynamicContext {
                 if(stopInRoute.getValue() < seq)
                     relevantRoutes.put(stopInRoute.getKey(), stopInRoute.getValue());
             }
-        }
+        });
 
         return relevantRoutes;
     }
 
-    Set<StopNode> getFootPaths(PathNode center){
-        if(center instanceof StopNode stopnode)
-            return footPathRepo.getFootPaths(stopnode, queryInfo.walkRadius());
+    private void assemblyFootpaths(PathNode to){
 
-        else
-            return footPathRepo.getFootPaths(center.getLocation(), queryInfo.walkRadius());
-    }
+        RoundNodeContext<?> targetContext = labelRepo.get(to);
 
-    private MultilabelBag assemblyFootpaths(PathNode to, MultilabelBag targetBag, int inputRound){
-        Set<StopNode> footPaths = getFootPaths(to);
+        pathFinder.getFootpaths(to).forEach(stop -> {
 
-        for(StopNode stop : footPaths){
+            RoundNodeContext<?> sourceStop = labelRepo.getOrDefault(stop.target(), null);
 
-            RoundNodeContext sourceStop = labelRepo.getOrDefault(stop, null);
             if(sourceStop == null)
-                continue;
+                return;
 
-            OptionalDouble pathCost = pathFinder.pathCost(to, stop);
+            for(Multilabel multilabel : sourceStop.getCurrentRoundList()){
+                
+                Multilabel cloned = new Multilabel(multilabel);
+                cloned.setBackwardLink(new WalkLink(stop.target(), multilabel));
 
-            if(pathCost.isEmpty()){
-                continue;
+                // update arrival time and walking distance
+                cloned.update(new FootpathUpdatePolicy(), stop.weight());
+
+                targetContext.addToCurrentIsolatedBag(cloned);
             }
-
-            // copy the source bag
-            MultilabelBag transferBag = new MultilabelBag(sourceStop.getRoundLabels()[inputRound]);
-
-            // update arrival time and walking distance
-            for (Multilabel multilabel : transferBag)
-                FootpathUpdatePolicy.getInstance().update(multilabel, pathCost.getAsDouble(), new WalkLink(stop));
-
-
-            targetBag.addAll(transferBag);
-        }
-
-        return targetBag;
-    }
-
-
-    private void processFootpathsFrom(PathNode from, MultilabelBag sourceBag, int outputRound) {
-        Set<StopNode> footPaths = getFootPaths(from);
-
-        // backward link to source node
-        WalkLink backwardLink = new WalkLink(from);
-
-        // iterate over all footpaths
-        for(StopNode stop : footPaths){
-            RoundNodeContext targetStop = labelRepo.getOrDefault(stop, null);
-            if(targetStop == null)
-                continue;
-
-            OptionalDouble pathCost = pathFinder.pathCost(from, stop);
-
-            if(pathCost.isEmpty()){
-                continue;
-            }
-
-            // copy the source bag
-            MultilabelBag tempBag = new MultilabelBag(sourceBag);
-
-            // update arrival time and walking distance
-            for (Multilabel multilabel : tempBag)
-                FootpathUpdatePolicy.getInstance().update(multilabel, pathCost.getAsDouble(), backwardLink);
-
-            // merge the temporary bag into the existing one
-            MultilabelBag roundBag = targetStop.getRoundLabels()[outputRound];
-            boolean improved = roundBag.addAll(tempBag);
-
-            // if the bag has been improved, mark the stop
-            int oldSize = roundBag.size();
-            if(roundBag.size() == oldSize || improved)
-                markedStops.add(stop);
-
-        }
-
+        });
     }
 
     private void processForwardFootpaths(){
-        for (StopNode markedStop : lastRoundMarkedStops) {
-            processFootpathsFrom(markedStop, labelRepo.get(markedStop).getRoundLabels()[currentRound - 1], currentRound);
+        for (StopNode markedStop : markedStops) {
+            processFootpathsFrom(markedStop);
         }
     }
+
+    private void processFootpathsFrom(PathNode from) {
+        pathFinder.getFootpaths(from).forEach(stop -> {
+            boolean improved = false;
+            RoundNodeContext<?> targetStop = labelRepo.getOrDefault(stop.target(), null);
+
+            if(targetStop == null)
+                return;
+
+            for(Multilabel multilabel : labelRepo.get(from).getCurrentRoundList()){
+
+                // backward link to source node
+                Multilabel cloned = new Multilabel(multilabel);
+                WalkLink backwardLink = new WalkLink(from, multilabel);
+
+                // update arrival time and walking distance
+                cloned.update(new FootpathUpdatePolicy(), stop.weight());
+
+                cloned.setBackwardLink(backwardLink);
+
+                improved = targetStop.addToCurrentIsolatedBag(cloned) || improved;
+            }
+
+            if(improved)
+                markedIsolatedStops.add((StopNode) stop.target());
+        });
+
+    }
+
 
 }

@@ -12,6 +12,8 @@ public interface RouteDAO {
 
     List<StopNode> getStops(RouteID routeID);
 
+    List<RouteID> selectAll();
+
     List<Map.Entry<RouteID, Integer>> getRoutes(StopNode stop) ;
 
     List<Location> getShapeAlongRoute(RouteID routeID, Location l1, Location l2);

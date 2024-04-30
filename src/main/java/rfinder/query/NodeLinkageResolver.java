@@ -1,8 +1,8 @@
 package rfinder.query;
 
-import rfinder.dao.DefaultDAO;
-import rfinder.dao.StopLinkDAO;
-import rfinder.dao.RoadDAO;
+import rfinder.dao.DefaultGraphDAO;
+import rfinder.dao.DefaultStopDAO;
+import rfinder.dao.GraphDAO;
 import rfinder.dao.StopDAO;
 
 import rfinder.pathfinding.EdgeLinkage;
@@ -13,10 +13,9 @@ import rfinder.structures.nodes.StopNode;
 
 public class NodeLinkageResolver implements EdgeLinkageResolver {
 
-    private final StopDAO stopDAO = new StopLinkDAO();
+    private final StopDAO stopDAO = new DefaultStopDAO();
 
-    // get linkages to closest edges
-    RoadDAO dao = new DefaultDAO();
+    GraphDAO dao = new DefaultGraphDAO();
 
     private final NodeAdapterFactory factory = new NodeAdapterFactory();
 

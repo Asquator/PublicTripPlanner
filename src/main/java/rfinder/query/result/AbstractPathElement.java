@@ -1,10 +1,11 @@
 package rfinder.query.result;
 
+import org.mapsforge.core.graphics.Color;
 import rfinder.structures.common.Location;
 
 import java.util.List;
 
-public class AbstractPathElement implements PathElement {
+public abstract class AbstractPathElement implements PathElement {
 
     private List<Location> shape;
 
@@ -16,4 +17,5 @@ public class AbstractPathElement implements PathElement {
     public List<Location> getShape() {
         return shape;
     }
+
 }

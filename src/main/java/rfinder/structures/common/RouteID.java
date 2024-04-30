@@ -18,6 +18,6 @@ public record RouteID(String routeId, byte direction) {
 
     @Override
     public String toString() {
-        return "[" + routeId + " : " + direction + "]";
+        return routeId + " : " + direction;
     }
 }

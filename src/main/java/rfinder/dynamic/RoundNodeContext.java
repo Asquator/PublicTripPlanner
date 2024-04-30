@@ -1,36 +1,79 @@
 package rfinder.dynamic;
 
-import java.util.Arrays;
+import rfinder.dynamic.label.Multilabel;
+import rfinder.dynamic.label.MultilabelBag;
 
-public class RoundNodeContext {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+public class RoundNodeContext<B extends MultilabelBag> {
+
+    private final rfinder.structures.nodes.PathNode pathNode;
+
+    private List<Multilabel> lastRoundList;
+    private List<Multilabel> currentRoundList;
+    private List<Multilabel> lastIsolatedList;
+    private List<Multilabel> currentIsolatedList;
+    private B bestBag;
 
 
-    private final MultilabelBag[] roundLabels;
-    private final rfinder.structures.nodes.PathNode PathNode;
+    public RoundNodeContext(rfinder.structures.nodes.PathNode node, Supplier<B> bagSupplier){
+        this.pathNode = node;
+        lastRoundList = new ArrayList<>();
+        currentRoundList = new ArrayList<>();
+        lastIsolatedList = new ArrayList<>();
+        currentIsolatedList = new ArrayList<>();
+        bestBag = bagSupplier.get();
+    }
 
 
     public rfinder.structures.nodes.PathNode getPathNode() {
-        return PathNode;
+        return pathNode;
     }
 
-    public RoundNodeContext(rfinder.structures.nodes.PathNode node, int size){
-        this.PathNode = node;
-        roundLabels = new MultilabelBag[size];
+    public List<Multilabel> getCurrentIsolatedList() {
+        return currentIsolatedList;
     }
 
-    public int size(){
-        return roundLabels.length;
+    public List<Multilabel> getCurrentRoundList() {
+        return currentRoundList;
     }
 
-    public MultilabelBag[] getRoundLabels() {
-        return roundLabels;
+    public List<Multilabel> getLastIsolatedList() {
+        return lastIsolatedList;
     }
 
-    @Override
-    public String toString() {
-        return "RoundLabeledStop{" +
-                "roundLabels=" + Arrays.toString(roundLabels) +
-                ", stopNode=" + PathNode +
-                '}';
+    public List<Multilabel> getLastRoundList() {
+        return lastRoundList;
     }
+
+    public B getBestBag() {
+        return bestBag;
+    }
+
+    public boolean addToCurrentRoundBag(Multilabel multilabel){
+        if(!bestBag.addEliminate(multilabel))
+            return false;
+
+        currentRoundList.add(multilabel);
+        return true;
+    }
+
+    public boolean addToCurrentIsolatedBag(Multilabel multilabel){
+        if(!bestBag.addEliminate(multilabel))
+            return false;
+
+        currentIsolatedList.add(multilabel);
+        return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    public void step(Supplier<? extends MultilabelBag> bagSupplier){
+        lastRoundList = currentRoundList;
+        lastIsolatedList = currentIsolatedList;
+        currentRoundList = new ArrayList<>();
+        currentIsolatedList = new ArrayList<>();
+    }
+
 }

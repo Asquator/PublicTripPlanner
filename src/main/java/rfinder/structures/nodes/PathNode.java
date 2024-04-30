@@ -1,11 +1,14 @@
 package rfinder.structures.nodes;
 
+import rfinder.dao.FootpathDAO;
+import rfinder.pathfinding.GraphPath;
 import rfinder.query.result.NominalPathElement;
-import rfinder.query.result.PathElement;
 import rfinder.structures.common.Location;
 import rfinder.structures.graph.GraphNode;
 
 import java.util.Objects;
+import java.util.OptionalDouble;
+import java.util.Set;
 
 public sealed class PathNode implements GraphNode<Integer> permits StopNode, VertexNode {
     private Location location;
@@ -35,6 +38,10 @@ public sealed class PathNode implements GraphNode<Integer> permits StopNode, Ver
     @Override
     public Integer id() {
         return id;
+    }
+
+    public Set<StopNode> getFootpathsWith(FootpathDAO dao, double radius){
+        return dao.getFootPaths(this.location, radius);
     }
 
     @Override

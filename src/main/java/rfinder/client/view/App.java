@@ -1,7 +1,7 @@
-package view;
+package rfinder.client.view;
 
 
-import view.map.MapController;
+import rfinder.client.view.map.MapController;
 
 public class App {
     public static void main(String[] args) {

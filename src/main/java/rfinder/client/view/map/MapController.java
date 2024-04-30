@@ -1,5 +1,5 @@
 
-package view.map;
+package rfinder.client.view.map;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -39,11 +39,12 @@ import org.mapsforge.map.layer.renderer.TileRendererLayer;
 import org.mapsforge.map.model.IMapViewPosition;
 import org.mapsforge.map.model.Model;
 import org.mapsforge.map.model.common.PreferencesFacade;
+import org.mapsforge.map.layer.Layer;
 import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.InternalRenderTheme;
-import rfinder.query.LocationPoint;
-import rfinder.query.QueryInfo;
-import view.QueryPanelController;
+import rfinder.client.view.QueryPanelController;
+import rfinder.query.result.PathElement;
+import rfinder.query.result.QuerySolution;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,13 +52,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 import java.util.prefs.Preferences;
 
 
@@ -67,6 +63,7 @@ public final class MapController extends JFrame {
 
     private static final String MESSAGE = "Quit?";
     private static final String TITLE = "Confirm close";
+    public static final int STROKE_WIDTH = 5;
     private final MapView mapView = createMapView();
 
     private Marker sourceMarker = new Marker(new LatLong(0,0), sourceMarkerBitmap,0,0);
@@ -78,6 +75,16 @@ public final class MapController extends JFrame {
 
     private static final int MARKER_SIZE = 20;
 
+    private final Map<QuerySolution, List<Layer>> solutionLayers = new HashMap<>();
+
+    private QuerySolution displayedSolution;
+
+    private static final EnumMap<PathElement.Color, Color> colorMap = new EnumMap<>(PathElement.Color.class);
+
+    // initialize color map
+    static {
+        Arrays.stream(PathElement.Color.values()).forEach(color -> colorMap.put(color, Color.valueOf(color.name())));
+    }
 
     static {
         Bitmap bitmap = null;
@@ -130,22 +137,23 @@ public final class MapController extends JFrame {
 
         initWindow(boundingBox);
         pointSelectionModel.select(0);
+
     }
 
     private void initWindow(BoundingBox boundingBox) {
         FXMLLoader fxmlLoader = new FXMLLoader(QueryPanelController.class.getResource("side_panel.fxml"));
 
         final JFrame frame = new JFrame();
+        JSplitPane splitPane = new JSplitPane();
+        JFXPanel jfxPanel = new JFXPanel();
+
         queryPanelController = new QueryPanelController();
+        queryPanelController.setMapController(this);
 
         // set loader controller, load and initialize the side pane
-        Platform.startup(()->{
+        Platform.runLater(()->{
             fxmlLoader.setController(queryPanelController);
             Scene sidePanelJFXScene;
-
-            JFXPanel jfxPanel = new JFXPanel();
-            frame.add(jfxPanel, BorderLayout.EAST);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             try{
                 sidePanelJFXScene = new Scene(fxmlLoader.load());
@@ -173,7 +181,13 @@ public final class MapController extends JFrame {
         try {
             SwingUtilities.invokeAndWait(()->{
                 frame.setTitle("RFINDER");
-                frame.add(mapView);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+                splitPane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
+                splitPane.setResizeWeight(0.8);
+                splitPane.setRightComponent(jfxPanel);
+                splitPane.setLeftComponent(mapView);
+                frame.add(splitPane);
                 frame.pack();
                 frame.setSize(new Dimension(1000, 800));
                 frame.setLocationRelativeTo(null);
@@ -218,11 +232,51 @@ public final class MapController extends JFrame {
         }
     }
 
-    private QueryInfo createQuery(){
-        LocalDateTime timestamp = queryPanelController.getTimestamp();
-        
-        return new QueryInfo(new LocationPoint(queryPanelController.sourceLocation()), new LocationPoint(queryPanelController.destinationLocation()),
-                OffsetDateTime.of(queryPanelController.getTimestamp(), ZoneId.systemDefault().getRules().getOffset(timestamp)),3, 1.0);
+    public void clearDisplayedSolutions(){
+        Layers mapLayers = mapView.getLayerManager().getLayers();
+
+        if(displayedSolution == null)
+            return;
+
+        for (Layer layer : solutionLayers.get(displayedSolution)) {
+            mapLayers.remove(layer);
+        }
+
+        displayedSolution = null;
+        solutionLayers.clear();
+    }
+
+    public void addSolutions(List<QuerySolution> solutions){
+        List<Layer> layers;
+        Paint paint;
+        Polyline polyline;
+
+        for (QuerySolution solution : solutions) {
+            layers = new ArrayList<>();
+
+            for (PathElement element : solution.elements()) {
+                paint = GRAPHIC_FACTORY.createPaint();
+                paint.setStrokeWidth(STROKE_WIDTH);
+                paint.setStyle(Style.STROKE);
+
+                polyline = new Polyline(paint, GRAPHIC_FACTORY);
+                paint.setColor(colorMap.get(element.defaultColor()));
+                polyline.addPoints(element.getShape().stream().map(location -> new LatLong(location.latitude(), location.longitude())).toList());
+
+                polyline.setVisible(true);
+                layers.add(polyline);
+            }
+
+            solutionLayers.put(solution, layers);
+        }
+    }
+
+    public void displaySolution(QuerySolution solution){
+        if(displayedSolution != null)
+            mapView.getLayerManager().getLayers().removeAll(solutionLayers.get(displayedSolution));
+
+        mapView.getLayerManager().getLayers().addAll(solutionLayers.get(solution));
+        displayedSolution = solution;
     }
 
     private BoundingBox addLayers(MapView mapView, List<File> mapFiles, HillsRenderConfig hillsRenderConfig)  {
@@ -250,16 +304,7 @@ public final class MapController extends JFrame {
 
         layers.add(tileRendererLayer);
 
-        Paint paint = GRAPHIC_FACTORY.createPaint();
-        paint.setStrokeWidth(3);
-        paint.setColor(Color.BLUE);
-        paint.setStyle(Style.STROKE);
-        Polyline polyline = new Polyline(paint, GRAPHIC_FACTORY);
-        polyline.setVisible(true);
-        polyline.addPoints(List.of(new LatLong(38.1217046, 13.3535291), new LatLong(38.1104102, 13.3625928), new LatLong(38.1159136, 13.3696240), new LatLong(38.1477512, 13.3650464)));
-        layers.add(polyline);
-
-        // Request a redraw to update the map view
+        // Request a redraw to update the map rfinder.client.view
         boundingBox = mapDataStore.boundingBox();
 
         // Debug

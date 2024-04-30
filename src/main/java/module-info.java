@@ -17,14 +17,16 @@ module rfinder {
     requires net.postgis.jdbc.geometry;
     requires net.postgis.jdbc;
     requires org.hibernate.orm.core;
-    requires spring.context;
+    requires org.jetbrains.annotations;
 
-    exports view;
-    opens view to javafx.fxml;
-    opens view.map to javafx.fxml;
+    exports rfinder.client.view;
+    opens rfinder.client.view to javafx.fxml;
+    opens rfinder.client.view.map to javafx.fxml;
 
     exports rfinder.structures.common;
     exports rfinder.dao;
     exports rfinder.query;
     exports rfinder.query.result;
+    exports rfinder.service;
+    opens rfinder.service to javafx.fxml;
 }

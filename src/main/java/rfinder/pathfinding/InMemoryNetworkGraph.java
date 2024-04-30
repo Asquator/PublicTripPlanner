@@ -1,6 +1,7 @@
 package rfinder.pathfinding;
 
-import rfinder.dao.RoadDAO;
+import rfinder.dao.GraphDAO;
+import rfinder.structures.links.ShapedLink;
 import rfinder.structures.graph.RoutableGraph;
 import rfinder.structures.nodes.PathNode;
 
@@ -11,9 +12,9 @@ public class InMemoryNetworkGraph implements RoutableGraph<PathNode, ShapedLink>
 
     private final HashMap<PathNode, Set<ShapedLink>> connections; // <node, links>
 
-    protected RoadDAO dao;
+    protected GraphDAO dao;
 
-    public InMemoryNetworkGraph(RoadDAO dao){
+    public InMemoryNetworkGraph(GraphDAO dao){
         this.dao = dao;
         connections = dao.getFullNetworkGraph();
         System.out.println("Initialized graph, total nodes " + connections.size());

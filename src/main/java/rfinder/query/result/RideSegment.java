@@ -11,24 +11,18 @@ public class RideSegment extends PathSegment {
     private final RouteID routeID;
     private final int sourceSequence;
 
+    private final int destSequence;
+
     private final List<Location> shape;
 
-    public RideSegment(StopView sourceStop, StopView destinationStop, RouteID routeID, int sourceSequence, List<Location> shape) {
-        super(sourceStop, destinationStop, shape);
+    public RideSegment(RouteID routeID, int sourceSequence, int destSequence, List<Location> shape) {
+        super(shape);
         this.routeID = routeID;
         this.sourceSequence = sourceSequence;
+        this.destSequence = destSequence;
         this.shape = shape;
     }
 
-    @Override
-    public StopView getSource() {
-        return (StopView) super.getSource();
-    }
-
-    @Override
-    public StopView getDestination() {
-        return (StopView) super.getDestination();
-    }
 
     public RouteID getRouteID() {
         return routeID;
@@ -37,5 +31,15 @@ public class RideSegment extends PathSegment {
     @Override
     public List<Location> getShape() {
         return shape;
+    }
+
+    @Override
+    public Color defaultColor() {
+        return Color.BLUE;
+    }
+
+    @Override
+    public String toString() {
+        return routeID.routeId();
     }
 }

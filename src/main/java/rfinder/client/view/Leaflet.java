@@ -1,4 +1,4 @@
-package view;
+package rfinder.client.view;
 
 import io.github.makbn.jlmap.JLMapView;
 import io.github.makbn.jlmap.JLProperties;
@@ -33,7 +33,7 @@ public class Leaflet extends Application {
 
     @Override
     public void start(Stage stage) {
-        //building a new map view
+        //building a new map rfinder.client.view
         final JLMapView map = JLMapView
                 .builder()
                 .mapType(JLProperties.MapType.OSM_MAPNIK)

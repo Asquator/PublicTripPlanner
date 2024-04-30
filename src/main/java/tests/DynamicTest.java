@@ -7,21 +7,23 @@ import rfinder.dynamic.NetworkQueryContext;
 import rfinder.query.QueryInfo;
 import rfinder.pathfinding.InMemoryNetworkGraph;
 import rfinder.query.StopPoint;
-import rfinder.query.result.QueryResult;
+import rfinder.query.result.QuerySolution;
 import rfinder.query.result.ResultExtractor;
-import rfinder.query.result.SingleExtremumExtractor;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 public class DynamicTest {
     public static void main(String[] args) {
+/*
 
         InMemoryNetworkGraph graph = new InMemoryNetworkGraph(new DefaultDAO());
         StopDAO stopDAO = new StopLinkDAO();
 
-        OffsetDateTime odt = OffsetDateTime.now();
+        LocalDateTime odt = LocalDateTime.now();
+
         QueryInfo qi = new QueryInfo(new StopPoint(717), new StopPoint(984), odt, 2, 1);
 
 
@@ -35,20 +37,23 @@ public class DynamicTest {
         NetworkQueryContext result = context.compute();
         long finishTime = System.currentTimeMillis();
 
-        /*
+        */
+/*
 
                 context.getLabelRepo().forEach((k, v) -> {
                     if(!(v.getRoundLabels()[2].isEmpty()))
                         System.out.println(v.getStopNode() + " " + v.getRoundLabels()[2].size() + " " + v.getRoundLabels()[2]);
                 });
-        */
+        *//*
+
 
         System.out.println("Time: " + (finishTime - startTime));
 
         ResultExtractor extractor = new SingleExtremumExtractor(new DefaultRouteDAO(), ECriteria.ARRIVAL_TIME);
-        QueryResult qres = extractor.extract(result);
+        QuerySolution qres = extractor.extract(result);
 
         System.out.println(qres);
+*/
 
     }
 }

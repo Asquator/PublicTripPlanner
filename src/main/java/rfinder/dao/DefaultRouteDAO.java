@@ -21,8 +21,9 @@ public class DefaultRouteDAO implements RouteDAO{
 
     private static final String STOPS_BY_ROUTE = "select * from unique_routes where route_id=? and direction_id=?";
 
-    private static final String ALL_ROUTES = "select * from unique_routes where stop_id = ?";
+    private static final String ROUTES_BY_STOP = "select * from unique_routes where stop_id = ?";
 
+    private static final String ALL_ROUTES = "select * from unique_routes";
     private static final String ROUTE_SHAPE = "select * from route_shape(?, ?, ?, ?)";
 
     @Override
@@ -50,11 +51,32 @@ public class DefaultRouteDAO implements RouteDAO{
     }
 
     @Override
+    public List<RouteID> selectAll() {
+        ResultSet res;
+        List<RouteID> ret = new ArrayList<>();
+
+        try(PreparedStatement statement = connection.prepareStatement(ALL_ROUTES)){
+            res = statement.executeQuery();
+
+            while(res.next()){
+                String routeId = res.getString("route_id");
+                byte direction = res.getByte("direction_id");
+                ret.add(new RouteID(routeId, direction));
+            }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        return ret;
+    }
+
+    @Override
     public List<Map.Entry<RouteID, Integer>> getRoutes(StopNode stop)  {
         ResultSet res;
         List<Map.Entry<RouteID, Integer>> ret = new LinkedList<>();
 
-        try(PreparedStatement statement = connection.prepareStatement(ALL_ROUTES)){
+        try(PreparedStatement statement = connection.prepareStatement(ROUTES_BY_STOP)){
             statement.setString(1, String.valueOf(stop.id()));
 
             res = statement.executeQuery();

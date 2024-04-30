@@ -1,7 +1,9 @@
 package rfinder.dynamic;
 
-import rfinder.pathfinding.QueryPathFinder;
+import rfinder.dao.RouteDAO;
+import rfinder.dynamic.label.MultilabelBag;
+import rfinder.query.QueryContext;
 
-public record NetworkQueryContext(QueryPathFinder pathFinder, TripRepository trips, LabelMap labels, MultilabelBag finalBag) {
+public record NetworkQueryContext(QueryContext queryContext, RouteDAO routeDAO, MultilabelBag finalBag) {
 
 }

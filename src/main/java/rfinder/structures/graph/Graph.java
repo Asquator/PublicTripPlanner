@@ -1,6 +1,6 @@
 package rfinder.structures.graph;
 
-import rfinder.structures.components.Link;
+import rfinder.structures.links.Link;
 
 import java.util.Set;
 

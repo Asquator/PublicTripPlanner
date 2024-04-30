@@ -5,7 +5,7 @@ import rfinder.structures.common.Location;
 import java.time.Duration;
 import java.util.List;
 
-public class SegmentPathElement implements PathElement{
+public abstract class SegmentPathElement implements PathElement{
     private final List<Location> shape;
     private final Duration duration;
     private final double km;
@@ -20,6 +20,8 @@ public class SegmentPathElement implements PathElement{
     public List<Location> getShape() {
         return shape;
     }
+
+
 
     public Duration getDuration() {
         return duration;

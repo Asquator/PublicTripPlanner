@@ -2,11 +2,12 @@ package rfinder.dynamic;
 
 import rfinder.structures.common.Trip;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 
-public record TripInstance(Trip trip, List<OffsetDateTime> stopTimes) {
+public record TripInstance(Trip trip, List<LocalDateTime> stopTimes) {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

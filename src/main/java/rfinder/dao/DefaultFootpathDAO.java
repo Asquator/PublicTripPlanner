@@ -5,28 +5,19 @@ import net.postgis.jdbc.geometry.Geometry;
 import net.postgis.jdbc.geometry.Point;
 import rfinder.structures.common.Location;
 import rfinder.structures.nodes.StopNode;
-import rfinder.structures.nodes.VertexNode;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DefaultFootpathDAO implements FootpathDAO {
-
-    private final Connection connection = DBManager.newConnection();
+public class DefaultFootpathDAO extends DBUser implements FootpathDAO {
 
     private static final String CLOSEST_STOPS_IN_RADIUS = "select stop_id, stop_loc\n" +
             "from stops\n" +
             "where ST_Distance(?, stop_loc::geography) / 1000 < ?";
 
-
-    public static final String CLOSEST_VERTEX_BY_LOC = "select id, geom\n" +
-            "from vertices\n" +
-            "order by geom <-> ?\n" +
-            "limit 1";
 
     public Set<StopNode> getFootPaths(Location location, double radius) {
         ResultSet res;
@@ -59,6 +50,5 @@ public class DefaultFootpathDAO implements FootpathDAO {
         ret.remove(stopNode);
         return ret;
     }
-
 
 }

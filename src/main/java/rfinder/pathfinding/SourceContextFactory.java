@@ -4,5 +4,5 @@ import rfinder.structures.graph.GraphNode;
 
 public interface SourceContextFactory<T extends GraphNode> {
 
-    SharedSourcePathContext<T> createContext(T source);
+    SourcePathContext<T> createContext(T source);
 }

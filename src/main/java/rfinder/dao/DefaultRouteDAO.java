@@ -6,7 +6,6 @@ import rfinder.structures.common.Location;
 import rfinder.structures.common.RouteID;
 import rfinder.structures.nodes.StopNode;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,9 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultRouteDAO implements RouteDAO{
-
-    Connection connection = DBManager.newConnection();
+public class DefaultRouteDAO extends DBUser implements RouteDAO{
 
     private static final String STOPS_BY_ROUTE = "select * from unique_routes where route_id=? and direction_id=?";
 

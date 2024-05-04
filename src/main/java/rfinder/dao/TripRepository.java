@@ -1,5 +1,6 @@
-package rfinder.dynamic;
+package rfinder.dao;
 
+import rfinder.structures.common.TripInstance;
 import rfinder.structures.common.RouteID;
 import java.util.List;
 

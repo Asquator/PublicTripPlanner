@@ -1,4 +1,4 @@
-package rfinder.dynamic;
+package rfinder.query.result;
 
 import rfinder.dao.RouteDAO;
 import rfinder.dynamic.label.MultilabelBag;

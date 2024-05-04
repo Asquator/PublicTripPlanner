@@ -1,26 +1,32 @@
 package rfinder.pathfinding;
 
-import rfinder.query.QueryGraphInfo;
 import rfinder.structures.links.ShapedLink;
 import rfinder.structures.links.ShapedPath;
 import rfinder.structures.nodes.PathNode;
-import rfinder.structures.nodes.StopNode;
 
 import java.util.List;
 
 public class QueryFootpathManager implements GraphPathFinder<PathNode, ShapedLink>, FootpathManager {
 
-    private final TotalSharedSourcePathFinder<PathNode, ShapedLink> graphPathFinder;
+    private final TotalSourcePathFinder<PathNode, ShapedLink> graphPathFinder;
     private final ExtendedQueryGraph queryGraph;
 
-    public QueryFootpathManager(ExtendedQueryGraph queryGraph, TotalSharedSourcePathFinder<PathNode, ShapedLink> graphPathFinder, QueryGraphInfo graphInfo){
+    public QueryFootpathManager(ExtendedQueryGraph queryGraph, TotalSourcePathFinder<PathNode, ShapedLink> graphPathFinder){
         this.queryGraph = queryGraph;
         this.graphPathFinder = graphPathFinder;
 
     }
 
+    /**
+     * Finds the shortest path between two nodes
+     * @param source source node
+     * @param destination destination node
+     * @return shortest shaped path
+     */
     public ShapedPath findPath(PathNode source, PathNode destination){
         GraphPath<PathNode> graphPath = graphPathFinder.findPath(source, destination);
+
+        // if failed to find a path, look in another direction
         if(graphPath == null){
             graphPath = graphPathFinder.findPath(destination, source);
 
@@ -35,14 +41,8 @@ public class QueryFootpathManager implements GraphPathFinder<PathNode, ShapedLin
     }
 
     @Override
-    public List<PathRecord<PathNode>> getFootpaths(PathNode source) {
-        return graphPathFinder.getAllComputed(queryGraph, source);
+    public List<PathRecord<? extends PathNode>> getFootpaths(PathNode source) {
+        return graphPathFinder.getAllComputed(source);
     }
-
-    @Override
-    public List<PathRecord<PathNode>> getFootpaths(StopNode source) {
-        return graphPathFinder.getAllComputed(queryGraph, source);
-    }
-
 
 }

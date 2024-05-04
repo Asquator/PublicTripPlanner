@@ -1,11 +1,13 @@
 package rfinder.query;
 
-import rfinder.pathfinding.EdgeLinkage;
+import rfinder.dao.GraphDAO;
+import rfinder.service.EdgeLinkageResolver;
+import rfinder.structures.links.EdgeLinkage;
 import rfinder.structures.nodes.PathNode;
 
-public record QueryGraphInfo(EdgeLinkage sourceLinkage, EdgeLinkage destinationLinkage, int maxTrips) {
-    public QueryGraphInfo(QueryInfo info, EdgeLinkageResolver resolver){
-        this(resolver.resolve(info.source()), resolver.resolve(info.destination()), info.maxTrips());
+public record QueryGraphInfo(GraphDAO graphDAO, EdgeLinkage sourceLinkage, EdgeLinkage destinationLinkage, int maxTrips) {
+    public QueryGraphInfo(GraphDAO graphDAO, QueryInfo info, EdgeLinkageResolver resolver){
+        this(graphDAO, info.source().resolve(resolver), info.destination().resolve(resolver), info.maxTrips());
     }
 
     public PathNode sourceRepr(){

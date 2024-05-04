@@ -1,7 +1,7 @@
-package rfinder.dynamic;
+package rfinder.dao;
 
 import javafx.util.Duration;
-import rfinder.dao.DBManager;
+import rfinder.structures.common.TripInstance;
 import rfinder.query.QueryInfo;
 import rfinder.structures.common.RouteID;
 import rfinder.structures.common.Trip;
@@ -14,7 +14,6 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -68,11 +67,13 @@ public class InMemoryTripStorage implements TripStorage {
     }
 
 
-    public class TripRepositoryView implements TripRepository{
+    public class TripRepositoryView implements TripRepository {
 
         private final Map<RouteID, List<TripInstance>> tripView = new HashMap<>();
 
         public TripRepositoryView(LocalDateTime minTime, LocalDateTime maxTime) {
+
+            // for each route, extract trips in a given time window
             for(Map.Entry<RouteID, List<TripInstance>> entry : allTrips.entrySet()){
                 List<TripInstance> trips = entry.getValue();
                 int least = findLeastElement(trips, (TripInstance instance) -> instance.stopTimes().getFirst(), minTime, LocalDateTime::isBefore, 0, trips.size() - 1);
@@ -99,6 +100,7 @@ public class InMemoryTripStorage implements TripStorage {
         allTrips.clear();
         boolean finished;
 
+        // retrieve trips from a sorted query result
         try(Connection connection = DBManager.newConnection()) {
             Statement stat = connection.createStatement();
             ResultSet res = stat.executeQuery(STOP_TIMES);
@@ -171,7 +173,4 @@ public class InMemoryTripStorage implements TripStorage {
 
         return new RouteContext(new RouteID(lastRouteID, lastDirection), trips);
     }
-
-
-
 }

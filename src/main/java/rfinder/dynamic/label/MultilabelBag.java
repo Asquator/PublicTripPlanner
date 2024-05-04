@@ -9,27 +9,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public abstract class MultilabelBag implements Iterable<Multilabel>, Cloneable{
-
-    // always sorted by the first label, starting from the worst
     protected List<Multilabel> multilabels = new LinkedList<>();
 
     private PathNode pathNode;
 
-    public MultilabelBag(){
+    public MultilabelBag() {
 
-    }
-
-    public MultilabelBag(MultilabelBag other){
-        multilabels.addAll(other.multilabels);
-        pathNode = other.pathNode;
-    }
-
-    public void setPathNode(PathNode pathNode) {
-        this.pathNode = pathNode;
-    }
-
-    public PathNode getPathNode() {
-        return pathNode;
     }
 
 
@@ -42,10 +27,6 @@ public abstract class MultilabelBag implements Iterable<Multilabel>, Cloneable{
     }
 
     public abstract boolean addEliminate(Multilabel multilabel);
-
-    public abstract boolean addEliminateAll(MultilabelBag tempBag);
-
-    public abstract boolean wouldBeEliminated(Multilabel multilabel);
 
 
 

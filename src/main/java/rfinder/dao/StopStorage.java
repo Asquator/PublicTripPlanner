@@ -6,6 +6,7 @@ import rfinder.structures.nodes.StopNode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class StopStorage {
     private Map<StopNode, List<Map.Entry<RouteID, Integer>>> stopRoutes;
@@ -20,6 +21,10 @@ public class StopStorage {
 
     public List<Map.Entry<RouteID, Integer>> getRoutes(StopNode stop) {
         return stopRoutes.get(stop);
+    }
+
+    public Set<StopNode> getStops(){
+        return stopRoutes.keySet();
     }
 
 }

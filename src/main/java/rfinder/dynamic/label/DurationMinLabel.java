@@ -3,7 +3,7 @@ package rfinder.dynamic.label;
 import java.time.Duration;
 import java.util.Objects;
 
-public class DurationMinLabel extends Label<Duration> {
+public class DurationMinLabel extends Label{
     private Duration duration;
     private static final Duration INIT_DURATION = Duration.ofSeconds(0);
 

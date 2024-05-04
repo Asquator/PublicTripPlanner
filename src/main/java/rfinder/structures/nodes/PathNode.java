@@ -1,13 +1,11 @@
 package rfinder.structures.nodes;
 
 import rfinder.dao.FootpathDAO;
-import rfinder.pathfinding.GraphPath;
-import rfinder.query.result.NominalPathElement;
+import rfinder.query.result.TerminalPathElement;
 import rfinder.structures.common.Location;
 import rfinder.structures.graph.GraphNode;
 
 import java.util.Objects;
-import java.util.OptionalDouble;
 import java.util.Set;
 
 public sealed class PathNode implements GraphNode<Integer> permits StopNode, VertexNode {
@@ -31,8 +29,8 @@ public sealed class PathNode implements GraphNode<Integer> permits StopNode, Ver
         return this instanceof StopNode;
     }
 
-    public NominalPathElement toElement(){
-        return new NominalPathElement(location);
+    public TerminalPathElement toElement(){
+        return new TerminalPathElement(location);
     }
 
     @Override

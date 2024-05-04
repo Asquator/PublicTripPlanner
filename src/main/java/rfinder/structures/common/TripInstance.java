@@ -1,9 +1,6 @@
-package rfinder.dynamic;
-
-import rfinder.structures.common.Trip;
+package rfinder.structures.common;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 

@@ -1,7 +1,8 @@
 package rfinder.structures.links;
 
+import rfinder.structures.common.TripInstance;
 import rfinder.dynamic.label.Multilabel;
-import rfinder.dynamic.NetworkQueryContext;
+import rfinder.query.result.NetworkQueryContext;
 import rfinder.query.result.PathSegment;
 import rfinder.query.result.RideSegment;
 import rfinder.structures.common.Location;
@@ -13,8 +14,8 @@ import java.util.List;
 
 public non-sealed class RideLink extends LabeledLink {
     private final RouteID routeID;
-    private final int tripSequence;
-    private final int sourceSequence;
+    private int tripSequence;
+    private int sourceSequence;
     private int destSequence;
 
     public RideLink(StopNode sourceNode, int sourceSequence, RouteID routeID, int tripSequence, Multilabel label) {
@@ -36,23 +37,25 @@ public non-sealed class RideLink extends LabeledLink {
         return routeID;
     }
 
-    public int getSourceSequence() {
-        return sourceSequence;
-    }
-
-    public int getDestSequence() {
-        return destSequence;
-    }
-
     @Override
-    public boolean correspondsToRoute(RouteID routeID) {
-        return this.routeID.routeId().equals(routeID.routeId());
+    public RideLink clone() throws CloneNotSupportedException {
+        RideLink clone = (RideLink) super.clone();
+        clone.sourceSequence = sourceSequence;
+        clone.destSequence = destSequence;
+        clone.tripSequence = tripSequence;
+        return clone;
     }
 
     @Override
     public PathSegment toSegment(PathNode next, Multilabel nextLabel, NetworkQueryContext queryContext) {
         List<Location> shape = queryContext.routeDAO().getShapeAlongRoute(routeID, target().getLocation(), next.getLocation());
-        return new RideSegment(routeID, sourceSequence, destSequence, shape);
+        RideSegment rideSegment = new RideSegment(routeID, sourceSequence, destSequence, shape);
+
+        TripInstance tripInstance = queryContext.queryContext().tripRepository().getRelevantTrips(routeID).get(tripSequence);
+        rideSegment.setStartTimeStamp(tripInstance.stopTimes().get(sourceSequence));
+        rideSegment.setEndTimeStamp(tripInstance.stopTimes().get(destSequence));
+
+        return rideSegment;
     }
 
     @Override

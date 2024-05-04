@@ -3,7 +3,7 @@ package rfinder.dynamic.label;
 
 import java.util.Objects;
 
-public class DoubleMinLabel extends Label<Double> {
+public class DoubleMinLabel extends Label{
 
     private double cost = 0;
 

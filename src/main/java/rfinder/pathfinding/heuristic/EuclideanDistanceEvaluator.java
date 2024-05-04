@@ -18,11 +18,9 @@ public class EuclideanDistanceEvaluator implements HeuristicEvaluator<PathNode> 
         double deltaLon = lon2Rad - lon1Rad;
 
         // Use the Euclidean distance formula
-        double distanceSquared = Math.pow(deltaLat, 2) + Math.pow(deltaLon, 2);
-        double euclideanDistance = Math.sqrt(distanceSquared);
 
         // Return the result in kilometers
-        return 6371 * euclideanDistance;
+        return 6371 * Math.sqrt(Math.pow(deltaLat, 2) + Math.pow(deltaLon, 2));
     }
 
     @Override

@@ -9,13 +9,11 @@ import java.util.Objects;
 
 public class ShapedPath extends GraphPath<PathNode> {
     private final List<PathNode> path;
-    private final double length;
     private final List<Location> shape;
 
     public ShapedPath(List<PathNode> path, double length, List<Location> shape) {
         super(path, length);
         this.path = path;
-        this.length = length;
         this.shape = shape;
     }
 
@@ -27,13 +25,10 @@ public class ShapedPath extends GraphPath<PathNode> {
         return path;
     }
 
-    public double getLength() {
-        return length;
-    }
 
     @Override
     public ShapedPath reversed() {
-        return new ShapedPath(path.reversed(), length, shape.reversed());
+        return new ShapedPath(path.reversed(), length(), shape.reversed());
     }
 
     @Override
@@ -42,19 +37,19 @@ public class ShapedPath extends GraphPath<PathNode> {
         if (obj == null || obj.getClass() != this.getClass()) return false;
         var that = (ShapedPath) obj;
         return Objects.equals(this.path, that.path) &&
-                Double.doubleToLongBits(this.length) == Double.doubleToLongBits(that.length);
+                Double.doubleToLongBits(this.length()) == Double.doubleToLongBits(that.length());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(path, length);
+        return Objects.hash(path, length());
     }
 
     @Override
     public String toString() {
         return "Path[" +
                 "path=" + path + ", " +
-                "length=" + length + ']';
+                "length=" + length() + ']';
     }
 
 }

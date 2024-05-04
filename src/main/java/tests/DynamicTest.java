@@ -1,20 +1,5 @@
 package tests;
 
-import rfinder.dao.*;
-import rfinder.dynamic.DynamicContext;
-import rfinder.dynamic.ECriteria;
-import rfinder.dynamic.NetworkQueryContext;
-import rfinder.query.QueryInfo;
-import rfinder.pathfinding.InMemoryNetworkGraph;
-import rfinder.query.StopPoint;
-import rfinder.query.result.QuerySolution;
-import rfinder.query.result.ResultExtractor;
-
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-
 public class DynamicTest {
     public static void main(String[] args) {
 /*

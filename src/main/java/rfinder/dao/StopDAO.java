@@ -1,6 +1,6 @@
 package rfinder.dao;
 
-import rfinder.pathfinding.EdgeLinkage;
+import rfinder.structures.links.EdgeLinkage;
 import rfinder.query.result.StopView;
 import rfinder.structures.common.Location;
 import rfinder.structures.nodes.StopNode;
@@ -14,6 +14,8 @@ public interface StopDAO {
     Location locById(int stopId);
 
     StopView viewById(int stopId);
+
+    StopNode nodeById(String stopId);
 
     List<StopNode> selectNodes();
 

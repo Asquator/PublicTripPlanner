@@ -56,8 +56,9 @@ import java.util.*;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-
 public final class MapController extends JFrame {
+    public static final int MIN_SIDE_PANEL_WIDTH = 250;
+    public static final int MAX_SIDE_PANEL_WIDTH = 600;
     private static final GraphicFactory GRAPHIC_FACTORY = AwtGraphicFactory.INSTANCE;
     private static final boolean SHOW_DEBUG_LAYERS = false;
 
@@ -66,6 +67,7 @@ public final class MapController extends JFrame {
     public static final int STROKE_WIDTH = 5;
     private final MapView mapView = createMapView();
 
+    // source and destination markers
     private Marker sourceMarker = new Marker(new LatLong(0,0), sourceMarkerBitmap,0,0);
     private Marker destinationMarker = new Marker(new LatLong(0,0),destMarkerBitmap,0,0);
     private static Bitmap destMarkerBitmap;
@@ -160,8 +162,10 @@ public final class MapController extends JFrame {
                 jfxPanel.setScene(sidePanelJFXScene);
             }
             catch (Exception exception){
-                System.err.println("Could not open map window\n" + exception.getMessage());
+                throw new RuntimeException("Couldn't load side panel", exception);
             }
+
+            // bind side panel fields to point selection
 
             queryPanelController.getDestinationField().focusedProperty().addListener(new ChangeListener<Boolean>() {
                 @Override
@@ -179,13 +183,21 @@ public final class MapController extends JFrame {
         });
 
         try {
+             /*split the window in two - map and the side window
+             * the side panel is embedded into Swing component for compatibility*/
+
             SwingUtilities.invokeAndWait(()->{
                 frame.setTitle("RFINDER");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
                 splitPane.setOrientation(JSplitPane.HORIZONTAL_SPLIT);
-                splitPane.setResizeWeight(0.8);
+                splitPane.setResizeWeight(0.75);
+
                 splitPane.setRightComponent(jfxPanel);
+
+                jfxPanel.setMinimumSize(new Dimension(MIN_SIDE_PANEL_WIDTH, 0));
+                jfxPanel.setMaximumSize(new Dimension(MAX_SIDE_PANEL_WIDTH, 0));
+
                 splitPane.setLeftComponent(mapView);
                 frame.add(splitPane);
                 frame.pack();
@@ -196,7 +208,6 @@ public final class MapController extends JFrame {
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-
 
         final PreferencesFacade preferencesFacade = new JavaPreferences(Preferences.userNodeForPackage(MapController.class));
 
@@ -232,6 +243,9 @@ public final class MapController extends JFrame {
         }
     }
 
+    /**
+     * clear all displayed layers
+     */
     public void clearDisplayedSolutions(){
         Layers mapLayers = mapView.getLayerManager().getLayers();
 
@@ -246,6 +260,10 @@ public final class MapController extends JFrame {
         solutionLayers.clear();
     }
 
+    /**
+     *  Add new solution layers
+     * @param solutions solution list
+     */
     public void addSolutions(List<QuerySolution> solutions){
         List<Layer> layers;
         Paint paint;
@@ -271,13 +289,45 @@ public final class MapController extends JFrame {
         }
     }
 
+    /**
+     * Display the given map solution
+     * @param solution solution
+     */
     public void displaySolution(QuerySolution solution){
-        if(displayedSolution != null)
-            mapView.getLayerManager().getLayers().removeAll(solutionLayers.get(displayedSolution));
+        SwingUtilities.invokeLater(() -> {
+            if(displayedSolution != null)
+                mapView.getLayerManager().getLayers().removeAll(solutionLayers.get(displayedSolution));
 
-        mapView.getLayerManager().getLayers().addAll(solutionLayers.get(solution));
-        displayedSolution = solution;
+            mapView.getLayerManager().getLayers().addAll(solutionLayers.get(solution));
+            displayedSolution = solution;
+        });
     }
+
+
+    // bind clicks to setting source and destination fields
+    private void handleNewSource(LatLong tapLatLong) {
+        mapView.getLayerManager().getLayers().remove(sourceMarker);
+        sourceMarker = new Marker(tapLatLong, sourceMarkerBitmap, 0, 0);
+        mapView.getLayerManager().getLayers().add(sourceMarker);
+        Platform.runLater(()->{
+            queryPanelController.setSourcePoint(tapLatLong);
+        });
+    }
+
+    private void handleNewDestination(LatLong tapLatLong) {
+        mapView.getLayerManager().getLayers().remove(destinationMarker);
+        destinationMarker = new Marker(tapLatLong, destMarkerBitmap, 0, 0);
+        mapView.getLayerManager().getLayers().add(destinationMarker);
+        Platform.runLater(()->{
+            queryPanelController.setDestinationPoint(tapLatLong);
+        });
+    }
+
+
+
+    // LIBRARY BOILERPLATE CODE FOR MAP CREATION
+
+
 
     private BoundingBox addLayers(MapView mapView, List<File> mapFiles, HillsRenderConfig hillsRenderConfig)  {
         Layers layers = mapView.getLayerManager().getLayers();
@@ -356,24 +406,6 @@ public final class MapController extends JFrame {
         return tileRendererLayer;
     }
 
-    private void handleNewSource(LatLong tapLatLong) {
-        mapView.getLayerManager().getLayers().remove(sourceMarker);
-        sourceMarker = new Marker(tapLatLong, sourceMarkerBitmap, 0, 0);
-        mapView.getLayerManager().getLayers().add(sourceMarker);
-        Platform.runLater(()->{
-            queryPanelController.setSourcePoint(tapLatLong);
-        });
-    }
-
-    private void handleNewDestination(LatLong tapLatLong) {
-        mapView.getLayerManager().getLayers().remove(destinationMarker);
-        destinationMarker = new Marker(tapLatLong, destMarkerBitmap, 0, 0);
-        mapView.getLayerManager().getLayers().add(destinationMarker);
-        Platform.runLater(()->{
-            queryPanelController.setDestinationPoint(tapLatLong);
-        });
-
-    }
 
 
     private File getDemFolder() {

@@ -1,12 +1,11 @@
 package rfinder.structures.links;
 
 import rfinder.dynamic.label.Multilabel;
-import rfinder.dynamic.NetworkQueryContext;
+import rfinder.query.result.NetworkQueryContext;
 import rfinder.query.result.PathSegment;
-import rfinder.structures.common.RouteID;
 import rfinder.structures.nodes.PathNode;
 
-public abstract sealed class LabeledLink extends PathLink permits RideLink, WalkLink {
+public abstract sealed class LabeledLink extends PathLink implements Cloneable permits RideLink, WalkLink {
 
     private final Multilabel targetLabel;
     public LabeledLink(PathNode node, Multilabel multilabel) {
@@ -18,7 +17,11 @@ public abstract sealed class LabeledLink extends PathLink permits RideLink, Walk
         return targetLabel;
     }
 
+    @Override
+    public LabeledLink clone() throws CloneNotSupportedException {
+        return (LabeledLink) super.clone();
+    }
+
     public abstract PathSegment toSegment(PathNode next, Multilabel nextLabel, NetworkQueryContext queryContext);
 
-    public abstract boolean correspondsToRoute(RouteID routeID);
 }

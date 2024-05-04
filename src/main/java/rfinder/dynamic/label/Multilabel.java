@@ -5,7 +5,7 @@ import rfinder.structures.links.LabeledLink;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.EnumSet;
 
 public class Multilabel  {
     protected Label[] labels;
@@ -34,11 +34,13 @@ public class Multilabel  {
             for (int i = 0; i < labels.length; i++) {
                 labels[i] = other.labels[i].clone();
             }
+
+            if(other.backwardLink != null)
+                backwardLink = other.backwardLink.clone();
+
         } catch (CloneNotSupportedException e){
             throw new AssertionError(e);
         }
-
-        backwardLink = other.backwardLink;
     }
 
     private LabeledLink backwardLink;
@@ -67,24 +69,6 @@ public class Multilabel  {
         return labels;
     }
 
-    public <T> void update(LabelUpdatePolicy<T> policy, T value){
-        policy.update(this, value);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Multilabel that = (Multilabel) o;
-        return Arrays.equals(labels, that.labels);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hash(backwardLink);
-        result = 31 * result + Arrays.hashCode(labels);
-        return result;
-    }
 
     @Override
     public String toString() {
@@ -94,15 +78,14 @@ public class Multilabel  {
                 '}';
     }
 
-    public boolean paretoDominates(Multilabel other){
-        boolean dominates = false;
+    public boolean paretoDominates(Multilabel other, EnumSet<ECriteria> criteria){
+        boolean dominates = true;
         int res;
-        for (int i = 0; i < labels.length; i++) {
+        for (ECriteria param : criteria) {
 
             // this dominates other iff labels[i] >= other.labels[i] for all i and labels[i] > other.labels[i] for at least one i
-            res = labels[i].compareTo(other.labels[i]);
-            if(res >= 0)
-                dominates = true;
+            res = labels[param.ordinal()].compareTo(other.labels[param.ordinal()]);
+
 
             if(res < 0)
                 return false;

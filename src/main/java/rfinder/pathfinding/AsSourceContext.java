@@ -4,99 +4,104 @@ import rfinder.structures.graph.GraphNode;
 import rfinder.structures.graph.RoutableGraph;
 import rfinder.structures.graph.RouteLink;
 
-import java.nio.file.Path;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class AsSourceContext<T extends GraphNode> implements TotalSharedSourcePathContext<T> {
-    private final HeuristicEvaluator<T> heuristicEvaluator;
+public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T> {
+    private final HeuristicEvaluator<T> heuristicEvaluator; // heuristic
     private final Map<T, RoutingNode<T>> exploredSet = new ConcurrentHashMap<>();
-    private final List<PathRecord<T>> computedList = new ArrayList<>();
-    private final PriorityBlockingQueue<RoutingNode<T>> openSet = new PriorityBlockingQueue<>();
-    private double maxPruningScore = Double.POSITIVE_INFINITY;
-    private final Lock openSetLock = new ReentrantLock();
+    private final PriorityBlockingQueue<RoutingNode<T>> openSet = new PriorityBlockingQueue<>(); // set of nodes to be explored
+    private final RoutableGraph<T, ? extends RouteLink<T>> graph;
+    private double maxPruningScore = Double.MAX_VALUE; // max score to prune the search
+    private final ReadWriteLock clearLock = new ReentrantReadWriteLock(); // lock to prevent clearing the context in the middle of a search
 
+    private final T source;
+    private final RoutingNode<T> sourceNode;
 
-    public AsSourceContext(T source, HeuristicEvaluator<T> heuristicEvaluator) {
+    public AsSourceContext(RoutableGraph<T, ? extends RouteLink<T>> graph, T source, HeuristicEvaluator<T> heuristicEvaluator) {
         this.heuristicEvaluator = heuristicEvaluator;
+        this.graph = graph;
+        this.source = source;
 
-        RoutingNode<T> rSource = new RoutingNode<>(source, null, 0, Double.MAX_VALUE / 2);
-        openSet.add(rSource);
-        exploredSet.put(source, rSource);
+        // add the source to the open set
+        sourceNode = new RoutingNode<>(source, null, 0, Double.MAX_VALUE / 2);
+        openSet.add(sourceNode);
+        exploredSet.put(source, sourceNode);
     }
+
 
     public void setMaxScore(double newMaxScore) {
         this.maxPruningScore = newMaxScore;
     }
 
-    @Override
-    public void tryComputeToAll(RoutableGraph<T, ? extends RouteLink<T>> graph, Collection<? extends T> nodes) {
-        PathRecord<T> record;
-
-        for (T node : nodes) {
-            record = tryCompute(graph, node);
-
-            if (record != null)
-                computedList.add(new PathRecord<>(node, exploredSet.get(node).getRouteScore()));
-        }
+    public void clearContext(){
+        clearLock.writeLock().lock();
+        exploredSet.clear();
+        openSet.clear();
+        openSet.add(sourceNode);
+        exploredSet.put(source, sourceNode);
+        clearLock.writeLock().unlock();
     }
 
     @Override
-    public List<PathRecord<T>> getAllComputed(RoutableGraph<T, ? extends RouteLink<T>> graph) {
-        return computedList;
-    }
+    public GraphPath<T> findPath(T destination) {
+        clearLock.readLock().lock();
 
+        GraphPath<T> ret = null;
 
-    @Override
-    public GraphPath<T> findPath(RoutableGraph<T, ? extends RouteLink<T>> graph, T destination) {
+        // check if the path has already been found
         RoutingNode<T> last = exploredSet.getOrDefault(destination, null);
 
         if (last != null) {
-            return reconstructPath(exploredSet, last);
-        }
-
-        if (findFurtherPath(graph, destination))
-            return reconstructPath(exploredSet, exploredSet.get(destination));
-
-        return null;
-    }
-
-    @Override
-    public OptionalDouble pathCost(RoutableGraph<T, ? extends RouteLink<T>> graph, T destination) {
-
-        // check if the path has already been found and return its score
-        RoutingNode<T> last = exploredSet.getOrDefault(destination, null);
-
-        if (last != null) {
-            return OptionalDouble.of(last.getRouteScore());
+            ret = reconstructPath(last);
         }
 
         // if not, continue exploring
-        if (findFurtherPath(graph, destination))
-            return OptionalDouble.of(exploredSet.get(destination).getRouteScore());
+        else synchronized (this) {
+            // check again if the path has already been found
+            last = exploredSet.getOrDefault(destination, null);
 
+            if (last == null)
+                last = findFurtherPath(destination);
+
+            if(last != null)
+                ret = reconstructPath(last);
+
+        }
+
+        clearLock.readLock().unlock();
+        return ret;
+    }
+
+    @Override
+    public OptionalDouble pathCost(T destination) {
+        clearLock.readLock().lock();
+        // check if the path has already been found and return its score
+        RoutingNode<T> last = exploredSet.getOrDefault(destination, null);
+        OptionalDouble ret;
+
+        // if not, continue exploring
+        synchronized (this) {
+            last = exploredSet.getOrDefault(destination, null);
+            if (last == null)
+                last = findFurtherPath(destination);
+
+            if(last != null)
+                ret = OptionalDouble.of(last.getRouteScore());
+
+            else
+                ret = OptionalDouble.empty();
+        }
+
+        clearLock.readLock().unlock();
         // if not found, return empty score
-        return OptionalDouble.empty();
-    }
-
-    private PathRecord<T> tryCompute(RoutableGraph<T, ? extends RouteLink<T>> graph, T destination) {
-        // check if the path has already been found and return its score
-        RoutingNode<T> last = exploredSet.getOrDefault(destination, null);
-        boolean success = true;
-
-        // if not, continue exploring
-        if (last == null)
-            success = findFurtherPath(graph, destination);
-
-        if (success)
-            return new PathRecord<>(destination, exploredSet.get(destination).getRouteScore());
-
-        // return null if can't find a path
-        return null;
+        return ret;
     }
 
 
@@ -107,18 +112,20 @@ public class AsSourceContext<T extends GraphNode> implements TotalSharedSourcePa
      * @param destination target node
      * @return return value
      */
-    private boolean findFurtherPath(RoutableGraph<T, ? extends RouteLink<T>> graph, T destination) {
-        openSetLock.lock();
+
+    /*
+      Necessary condition: clearLock is held by one of the calling functions
+     */
+    private RoutingNode<T> findFurtherPath(T destination) {
 
         while (!openSet.isEmpty()) {
 
             RoutingNode<T> best = openSet.poll();
-            openSetLock.unlock();
 
             // Lowest scored node is the target
 
             if (best.getCurrent().equals(destination)) {
-                return true;
+                return best;
             }
 
             Set<? extends RouteLink<T>> connections;
@@ -129,19 +136,16 @@ public class AsSourceContext<T extends GraphNode> implements TotalSharedSourcePa
                 // Compute the new minimal distance from source
                 double newScore = best.getRouteScore() + link.weight();
 
-              /*  if(newScore > maxPruningScore)
-                    continue;*/
-/*
+                if(newScore > maxPruningScore)
+                    continue;
 
-                 Retrieve the routing node associated with node
-                If it doesn't exist, create a new one
-*/
+               /* Retrieve the routing node associated with node
+                If it doesn't exist, create a new one*/
 
                 RoutingNode<T> rNode = exploredSet.getOrDefault(node, new RoutingNode<>(node));
 
                 // In case a new routing node was created, record it
                 exploredSet.put(node, rNode);
-
 
                 // If a closer distance was found, update the rNode
                 if (newScore < rNode.getRouteScore()) {
@@ -152,13 +156,13 @@ public class AsSourceContext<T extends GraphNode> implements TotalSharedSourcePa
                 }
             }
 
-            openSetLock.lock();
         }
 
-        return false;
+        return null;
     }
 
-    private GraphPath<T> reconstructPath(Map<T, RoutingNode<T>> pathTree, RoutingNode<T> last) {
+    private GraphPath<T> reconstructPath(RoutingNode<T> last) {
+        clearLock.readLock().lock();
         LinkedList<T> list = new LinkedList<>();
         T previous;
         double length = last.getRouteScore();
@@ -166,10 +170,11 @@ public class AsSourceContext<T extends GraphNode> implements TotalSharedSourcePa
         do {
             list.addFirst(last.getCurrent());
             previous = last.getPrevious();
-            last = previous == null ? null : pathTree.get(previous);
+            last = previous == null ? null : exploredSet.get(previous);
 
         } while (last != null);
 
+        clearLock.readLock().unlock();
         return new GraphPath<>(list, length);
     }
 }

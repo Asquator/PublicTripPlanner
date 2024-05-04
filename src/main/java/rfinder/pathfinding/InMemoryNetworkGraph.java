@@ -1,27 +1,31 @@
 package rfinder.pathfinding;
 
-import rfinder.dao.GraphDAO;
+import rfinder.structures.common.UnorderedPair;
+import rfinder.structures.links.EdgeData;
 import rfinder.structures.links.ShapedLink;
-import rfinder.structures.graph.RoutableGraph;
 import rfinder.structures.nodes.PathNode;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
-public class InMemoryNetworkGraph implements RoutableGraph<PathNode, ShapedLink> {
+public class InMemoryNetworkGraph implements ExternalLinkableGraph<PathNode, ShapedLink>{
 
-    private final HashMap<PathNode, Set<ShapedLink>> connections; // <node, links>
+    private final Map<PathNode, Set<ShapedLink>> connections; // <node, links>
+    private final Map<UnorderedPair<PathNode>, EdgeData<PathNode>> edgeData;
 
-    protected GraphDAO dao;
 
-    public InMemoryNetworkGraph(GraphDAO dao){
-        this.dao = dao;
-        connections = dao.getFullNetworkGraph();
-        System.out.println("Initialized graph, total nodes " + connections.size());
+    public InMemoryNetworkGraph(Map<PathNode, Set<ShapedLink>> connections, Map<UnorderedPair<PathNode>, EdgeData<PathNode>> edgeData) {
+        this.connections = connections;
+        this.edgeData = edgeData;
     }
 
     @Override
     public Set<ShapedLink> getLinks(PathNode node) {
         return connections.get(node);
+    }
+
+    @Override
+    public EdgeData<PathNode> getEdgeData(UnorderedPair<PathNode> edgeId) {
+        return edgeData.getOrDefault(edgeId, new EdgeData<>());
     }
 }

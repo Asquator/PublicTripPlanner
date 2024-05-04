@@ -1,7 +1,6 @@
 package rfinder.query.result;
 
 import rfinder.dynamic.label.Multilabel;
-import rfinder.dynamic.NetworkQueryContext;
 
 import java.util.ArrayList;
 import java.util.List;

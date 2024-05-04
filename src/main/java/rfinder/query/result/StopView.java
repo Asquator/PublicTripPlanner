@@ -1,9 +1,10 @@
 package rfinder.query.result;
 
+import javafx.scene.Node;
+import rfinder.client.view.NodeSolutionExtractor;
 import rfinder.structures.common.Location;
-import org.hibernate.*;
 
-public class StopView extends NominalPathElement{
+public class StopView extends TerminalPathElement {
 
     private final int stopId;
     private final String name;
@@ -20,6 +21,11 @@ public class StopView extends NominalPathElement{
 
     public int getStopId() {
         return stopId;
+    }
+
+    @Override
+    public Node getNodeWith(NodeSolutionExtractor extractor) {
+        return extractor.createNode(this);
     }
 
     @Override

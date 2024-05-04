@@ -1,41 +1,33 @@
 package rfinder.dao;
 
 import net.postgis.jdbc.PGgeometry;
-import net.postgis.jdbc.geometry.MultiLineString;
 import net.postgis.jdbc.geometry.Point;
-import rfinder.pathfinding.EdgeLinkage;
+import rfinder.dao.geo.GeoHelper;
+import rfinder.pathfinding.EdgeCut;
+import rfinder.pathfinding.InMemoryNetworkGraph;
+import rfinder.structures.common.UnorderedPair;
+import rfinder.structures.links.EdgeData;
+import rfinder.structures.links.EdgeLinkage;
 import rfinder.structures.links.ShapedLink;
 import rfinder.structures.common.Location;
 import rfinder.structures.nodes.*;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-public class DefaultGraphDAO implements GraphDAO {
-    private Connection connection;
+public class DefaultGraphDAO extends DBUser implements GraphDAO {
 
-    private final StopDAO stopDAO = new DefaultStopDAO();
-
+    public static final int SRID = 4326;
+    private final DefaultStopDAO stopDAO = new DefaultStopDAO();
 
     public static final String ALL_EDGES = "select source, target, km, geom_source, geom_dest, geom_way from edge_map";
 
     private static final String CLOSEST_EDGE = "select * from get_closest_edge(?)";
 
-    public DefaultGraphDAO(){
-        connection = DBManager.newConnection();
-    }
+    private static final String EDGE_CUT = "select * from edge_cut(?, ?, ?, ?)";
 
-
-    @SuppressWarnings("unchecked")
-    private static List<Location> geomToShape(MultiLineString lineString){
-        List<Location> ret = new ArrayList<>();
-        Arrays.stream(lineString.getLines()).forEach(l -> l.iterator().forEachRemaining(p -> ret.add(Location.fromPoint((Point)p))));
-
-        return ret;
-    }
 
     public HashMap<PathNode, Set<ShapedLink>> getFullRoadGraph(){
         ResultSet res;
@@ -70,7 +62,7 @@ public class DefaultGraphDAO implements GraphDAO {
                 nodes.put(targetId, targetNode);
 
                 // retrieve shape
-                shape = geomToShape((MultiLineString) new PGgeometry(res.getObject("geom_way").toString()).getGeometry());
+                shape = GeoHelper.geomToShape(new PGgeometry(res.getObject("geom_way").toString()).getGeometry());
 
                 // update links set in graph
                 connections = graph.getOrDefault(sourceNode, new HashSet<>());
@@ -88,15 +80,44 @@ public class DefaultGraphDAO implements GraphDAO {
         catch (SQLException ex){
             throw new RuntimeException(ex);
         }
+    };
+
+    public EdgeCut getEdgeCut(PathNode source, PathNode target, Location loc1, Location loc2){
+        try(PreparedStatement statement = connection.prepareStatement(EDGE_CUT)){
+            statement.setInt(1, source.id());
+            statement.setInt(2, target.id());
+            statement.setObject(3, new PGgeometry(loc1.toPoint()));
+            statement.setObject(4, new PGgeometry(loc2.toPoint()));
+
+            ResultSet res = statement.executeQuery();
+
+            if(res.next()) {
+                double km = res.getDouble("km");
+                List<Location> shape = GeoHelper.geomToShape(new PGgeometry(res.getObject("geom").toString()).getGeometry());
+
+                if(km < 0) {
+                    shape = shape.reversed();
+                    km = -km;
+                }
+
+                return new EdgeCut(shape, km);
+
+            } else return null;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
-    public HashMap<PathNode, Set<ShapedLink>> getFullNetworkGraph(){
+    public InMemoryNetworkGraph getNetworkGraph(){
 
-        final double EXTENSION_FACTOR = 0.0005;
+        final double EXTENSION_FACTOR = 0.0001;
         List<Location> sourceShape, targetShape;
 
-        HashMap<PathNode, Set<ShapedLink>> fullGraph = getFullRoadGraph();
+        HashMap<PathNode, Set<ShapedLink>> graphConnnections = getFullRoadGraph();
 
+        Map<UnorderedPair<PathNode>, EdgeData<PathNode>> edges = new HashMap<>();
 
         List<Map.Entry<Integer, EdgeLinkage>> linkedStops = stopDAO.getLinkedStops();
 
@@ -109,36 +130,44 @@ public class DefaultGraphDAO implements GraphDAO {
             // set of graph links
             Set<ShapedLink> stopConnections = new HashSet<>();
 
-            fullGraph.put(stopNode, stopConnections);
-            sourceShape = List.of(stopNode.getLocation(), linkage.source().getLocation());
-            targetShape = List.of(stopNode.getLocation(), linkage.target().getLocation());
+            graphConnnections.put(stopNode, stopConnections);
 
-            //creating two edges from a stop to the closest edge's vertices
-            stopConnections.add(new ShapedLink(linkage.source(), linkage.kmSource() + EXTENSION_FACTOR, sourceShape));
-            stopConnections.add(new ShapedLink(linkage.target(), linkage.kmTarget() + EXTENSION_FACTOR, targetShape));
+            // create an unordered pair representing the edge, (first, second) = (source, target)
+            UnorderedPair<PathNode> edgeId = new UnorderedPair<>(linkage.source(), linkage.target());
+            EdgeData<PathNode> edgeData = edges.getOrDefault(edgeId, new EdgeData<>());
+            edges.put(edgeId, edgeData);
 
-            // creating two edges pointing from the closest edge's vertices to the stop
-            fullGraph.getOrDefault(linkage.source(), new HashSet<>()).add(new ShapedLink(stopNode, linkage.kmSource() + EXTENSION_FACTOR, sourceShape.reversed()));
-            fullGraph.getOrDefault(linkage.target(), new HashSet<>()).add(new ShapedLink(stopNode, linkage.kmTarget() + EXTENSION_FACTOR, targetShape.reversed()));
+            edgeData.addLinkage(linkage.source());
+            edgeData.addLinkage(linkage.target());
+
+            // link back and forth for each already linked node. Extract and save the appropriate edge cuts
+            edgeData.linkIterator().forEachRemaining(otherNode -> {
+                EdgeCut edgeCut = getEdgeCut(linkage.source(), linkage.target(), stopNode.getLocation(), otherNode.getLocation());
+                stopConnections.add(new ShapedLink(otherNode, edgeCut.km() + EXTENSION_FACTOR, edgeCut.shape()));
+                graphConnnections.getOrDefault(otherNode, new HashSet<>()).add(
+                        new ShapedLink(stopNode, edgeCut.km() + EXTENSION_FACTOR, edgeCut.shape().reversed()));
+            });
+
+            edgeData.addLinkage(stopNode);
         }
 
-        return fullGraph;
+        return new InMemoryNetworkGraph(graphConnnections, edges);
     }
 
 
     @Override
-    public EdgeLinkage getLinkage(Location location, NodeFactory nodeFactory) {
+    public EdgeLinkage getEdgeLinkage(Location location, NodeFactory nodeFactory) {
         ResultSet res;
 
         try (PreparedStatement statement = connection.prepareStatement(CLOSEST_EDGE)) {
             Point point = location.toPoint();
-            point.setSrid(4326);
+            point.setSrid(SRID);
             statement.setObject(1, new PGgeometry(point));
             res = statement.executeQuery();
 
             //if the location has been found, return the linkage
             if (res.next()) {
-                return Extractors.extractLink(res, nodeFactory);
+                return GeoHelper.extractLink(res, nodeFactory);
             } else
                 throw new RuntimeException("Couldn't find vertex");
 
@@ -147,4 +176,9 @@ public class DefaultGraphDAO implements GraphDAO {
         }
     }
 
+    @Override
+    public void closeConnection() {
+        super.closeConnection();
+        stopDAO.closeConnection();
+    }
 }

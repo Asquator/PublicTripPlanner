@@ -16,10 +16,6 @@ public class ExtendedRoutableGraph<T extends GraphNode, L extends RouteLink<T>> 
         this.originalGraph = originalGraph;
     }
 
-    public ExtendedRoutableGraph(RoutableGraph<T, L> originalGraph, HashMap<T, Set<L>> newLinks) {
-        this.originalGraph = originalGraph;
-        this.newLinks = newLinks;
-    }
 
     public void addLink(T source, L link){
         if(!newLinks.containsKey(source))

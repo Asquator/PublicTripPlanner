@@ -1,15 +1,18 @@
 package rfinder.query.result;
 
+import javafx.scene.Node;
+import rfinder.client.view.NodeSolutionExtractor;
 import rfinder.structures.common.Location;
 
-import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
-public class NominalPathElement extends AbstractPathElement {
+public class TerminalPathElement extends AbstractPathElement {
 
     private String name;
 
-    public NominalPathElement(Location location){
+
+    public TerminalPathElement(Location location) {
         super(List.of(location));
         name = location.toString();
     }
@@ -17,6 +20,11 @@ public class NominalPathElement extends AbstractPathElement {
     @Override
     public Color defaultColor() {
         return Color.TRANSPARENT;
+    }
+
+    @Override
+    public Node getNodeWith(NodeSolutionExtractor extractor) {
+        return extractor.createNode(this);
     }
 
     void setName(String name){

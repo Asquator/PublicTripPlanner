@@ -4,7 +4,7 @@ package rfinder.structures.nodes;
 import rfinder.dao.FootpathDAO;
 import rfinder.dao.StopDAO;
 import rfinder.dao.DefaultStopDAO;
-import rfinder.query.result.NominalPathElement;
+import rfinder.query.result.TerminalPathElement;
 import rfinder.structures.common.Location;
 import rfinder.structures.graph.GraphNode;
 
@@ -28,7 +28,7 @@ public final class StopNode extends PathNode implements GraphNode<Integer> {
     }
 
     @Override
-    public NominalPathElement toElement() {
+    public TerminalPathElement toElement() {
         return linkDAO.viewById(id());
     }
 }

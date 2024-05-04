@@ -1,6 +1,8 @@
 package rfinder.query.result;
 
+import javafx.scene.Node;
 import org.mapsforge.core.graphics.Color;
+import rfinder.client.view.NodeSolutionExtractor;
 import rfinder.structures.common.Location;
 
 import java.util.List;
@@ -26,4 +28,7 @@ public interface PathElement {
     List<Location> getShape();
 
     Color defaultColor();
+
+    Node getNodeWith(NodeSolutionExtractor extractor);
+
 }

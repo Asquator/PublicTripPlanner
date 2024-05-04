@@ -3,7 +3,7 @@ package tests;
 
 import rfinder.dao.DefaultDAO;
 import rfinder.dao.RoadDAO;
-import rfinder.dynamic.TripRepository;
+import rfinder.dao.TripRepository;
 import rfinder.structures.common.Location;
 import rfinder.structures.common.RouteID;
 import rfinder.structures.nodes.PathNode;

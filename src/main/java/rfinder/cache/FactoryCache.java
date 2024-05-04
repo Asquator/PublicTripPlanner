@@ -1,14 +1,21 @@
 package rfinder.cache;
 
-import rfinder.cache.Cache;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
-public class FactoryCache<K, V> implements Cache<K, V> {
+public class FactoryCache<K, V> {
+    protected class CacheElement{
+        public long lastAccessed = System.currentTimeMillis();
+        public V value;
 
-    private final Map<K, V> cacheStorage = new ConcurrentHashMap<>();
+        public CacheElement(V value){
+            this.value = value;
+        }
+    }
+
+    private final Map<K, CacheElement> cacheStorage = new ConcurrentHashMap<>();
 
     private final FactoryFunction<K,V> factory;
 
@@ -17,20 +24,28 @@ public class FactoryCache<K, V> implements Cache<K, V> {
         V create(K key, Object... args);
     }
 
-    public FactoryCache(FactoryFunction<K, V> factory) {
+    public FactoryCache(FactoryFunction<K, V> factory, long timeToLiveMillis, long timeBetweenScansMillis){
         this.factory = factory;
+
+        ScheduledExecutorService cleanerExecutor = Executors.newSingleThreadScheduledExecutor();
+        cleanerExecutor.scheduleAtFixedRate(() -> {
+            for(Map.Entry<K, CacheElement> entry : cacheStorage.entrySet()){
+                if(System.currentTimeMillis() - entry.getValue().lastAccessed > timeToLiveMillis){
+                    remove(entry.getKey());
+                }
+            }
+
+        }, timeBetweenScansMillis, timeBetweenScansMillis, java.util.concurrent.TimeUnit.MILLISECONDS);
+
     }
 
     public V get(K key, Object... args) {
-        return cacheStorage.computeIfAbsent(key, k -> factory.create(key, args));
+        CacheElement cacheElement = cacheStorage.computeIfAbsent(key, k -> new CacheElement(factory.create(key, args)));
+        cacheElement.lastAccessed = System.currentTimeMillis();
+        return cacheElement.value;
     }
 
-    @Override
-    public V get(K key) {
-        return cacheStorage.computeIfAbsent(key, k->factory.create(key));
-    }
 
-    @Override
     public void remove(K key) {
         cacheStorage.remove(key);
     }

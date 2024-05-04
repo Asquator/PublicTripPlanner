@@ -1,5 +1,7 @@
 package rfinder.query.result;
 
+import javafx.scene.Node;
+import rfinder.client.view.NodeSolutionExtractor;
 import rfinder.structures.common.Location;
 import rfinder.structures.common.RouteID;
 import rfinder.structures.nodes.StopNode;
@@ -23,6 +25,9 @@ public class RideSegment extends PathSegment {
         this.shape = shape;
     }
 
+    public int numOfStops() {
+        return destSequence - sourceSequence + 1;
+    }
 
     public RouteID getRouteID() {
         return routeID;
@@ -36,6 +41,11 @@ public class RideSegment extends PathSegment {
     @Override
     public Color defaultColor() {
         return Color.BLUE;
+    }
+
+    @Override
+    public Node getNodeWith(NodeSolutionExtractor extractor) {
+        return extractor.createNode(this);
     }
 
     @Override

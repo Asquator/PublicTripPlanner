@@ -1,0 +1,406 @@
+@startuml
+
+/' diagram meta data start
+config=StructureConfiguration;
+{
+  "projectClassification": {
+    "searchMode": "OpenProject", // OpenProject, AllProjects
+    "includedProjects": "",
+    "pathEndKeywords": "*.impl",
+    "isClientPath": "",
+    "isClientName": "",
+    "isTestPath": "",
+    "isTestName": "",
+    "isMappingPath": "",
+    "isMappingName": "",
+    "isDataAccessPath": "",
+    "isDataAccessName": "",
+    "isDataStructurePath": "",
+    "isDataStructureName": "",
+    "isInterfaceStructuresPath": "",
+    "isInterfaceStructuresName": "",
+    "isEntryPointPath": "",
+    "isEntryPointName": "",
+    "treatFinalFieldsAsMandatory": false
+  },
+  "graphRestriction": {
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "removeByInheritance": "", // inheritance/annotation based filtering is done in a second step
+    "removeByAnnotation": "",
+    "removeByClassPackage": "", // cleanup the graph after inheritance/annotation based filtering is done
+    "removeByClassName": "",
+    "cutMappings": false,
+    "cutEnum": true,
+    "cutTests": true,
+    "cutClient": true,
+    "cutDataAccess": true,
+    "cutInterfaceStructures": true,
+    "cutDataStructures": true,
+    "cutGetterAndSetter": true,
+    "cutConstructors": true
+  },
+  "graphTraversal": {
+    "forwardDepth": 3,
+    "backwardDepth": 3,
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "hideMappings": false,
+    "hideDataStructures": false,
+    "hidePrivateMethods": true,
+    "hideInterfaceCalls": true, // indirection: implementation -> interface (is hidden) -> implementation
+    "onlyShowApplicationEntryPoints": false, // root node is included
+    "useMethodCallsForStructureDiagram": "ForwardOnly" // ForwardOnly, BothDirections, No
+  },
+  "details": {
+    "aggregation": "GroupByClass", // ByClass, GroupByClass, None
+    "showClassGenericTypes": true,
+    "showMethods": true,
+    "showMethodParameterNames": true,
+    "showMethodParameterTypes": true,
+    "showMethodReturnType": true,
+    "showPackageLevels": 2,
+    "showDetailedClassStructure": true
+  },
+  "rootClass": "rfinder.client.view.SimplifiedSolutionExtractor",
+  "extensionCallbackMethod": "" // qualified.class.name#methodName - signature: public static String method(String)
+}
+diagram meta data end '/
+
+
+
+digraph g {
+    rankdir="TB"
+    splines=polyline
+    
+
+'nodes 
+subgraph cluster_107944136 { 
+   	label=query
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_1014850563 { 
+   	label=result
+	labeljust=l
+	fillcolor="#d8d8d8"
+	style=filled
+   
+   AbstractPathElement1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)AbstractPathElement</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   shape: List&lt;Location&gt; [0..*]</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+PathSegment1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)PathSegment</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   endTimeStamp: LocalDateTime [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   shape: List&lt;Location&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   startTimeStamp: LocalDateTime [0..1]</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+QuerySolution1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)QuerySolution</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   elements: List&lt;PathElement&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   finalMultilabel: Multilabel [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ elements(): List&lt;PathElement&gt;</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+RideSegment1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)RideSegment</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   destSequence: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   routeID: RouteID [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   shape: List&lt;Location&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   sourceSequence: int [1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ defaultColor(): Color</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getNodeWith(extractor: NodeSolutionExtractor): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ numOfStops(): int</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+SegmentPathElement1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)SegmentPathElement</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   duration: Duration [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   km: double [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   shape: List&lt;Location&gt; [0..*]</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+StopView1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)StopView</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   name: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   stopId: int [1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ getNodeWith(extractor: NodeSolutionExtractor): Node</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+TerminalPathElement1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)TerminalPathElement</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   name: String [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ defaultColor(): Color</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getNodeWith(extractor: NodeSolutionExtractor): Node</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+WalkSegment1642104039[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)WalkSegment</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   duration: Duration [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   km: double [1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ defaultColor(): Color</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getNodeWith(extractor: NodeSolutionExtractor): Node</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+} 
+
+subgraph cluster_1357712437 { 
+   	label=client
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_218880280 { 
+   	label=view
+	labeljust=l
+	fillcolor="#d8d8d8"
+	style=filled
+   
+   DetailedSolutionExtractor1412967150[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)DetailedSolutionExtractor</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ createNode(walkSegment: WalkSegment): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ createNode(rideSegment: RideSegment): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ createNode(stopView: StopView): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ createNode(terminalPathElement: TerminalPathElement): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ extract(item: QuerySolution): Node</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+SimplifiedSolutionExtractor1412967150[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)SimplifiedSolutionExtractor</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ createNode(walkSegment: WalkSegment): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ createNode(rideSegment: RideSegment): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ createNode(stopView: StopView): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ createNode(terminalPathElement: TerminalPathElement): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >+ extract(item: QuerySolution): Node</TD></TR>
+<TR><TD ALIGN="LEFT" >- extractDescription(querySolution: QuerySolution): Node</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+} 
+
+subgraph cluster_185106784 { 
+   	label=structures
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_1734147527 { 
+   	label=common
+	labeljust=l
+	fillcolor="#d8d8d8"
+	style=filled
+   
+   Location1363273955[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Location</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ fromPoint(point: Point): Location</TD></TR>
+<TR><TD ALIGN="LEFT" >+ fromValues(latitude: double, longitude: double): Location</TD></TR>
+<TR><TD ALIGN="LEFT" >+ latitude(): double</TD></TR>
+<TR><TD ALIGN="LEFT" >+ longitude(): double</TD></TR>
+<TR><TD ALIGN="LEFT" >+ toPoint(): Point</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+RouteID1363273955[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)RouteID</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   direction: byte [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   routeId: String [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ direction(): byte</TD></TR>
+<TR><TD ALIGN="LEFT" >+ routeId(): String</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_740543061 { 
+   	label=links
+	labeljust=l
+	fillcolor="#d8d8d8"
+	style=filled
+   
+   LabeledLink640626239[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)LabeledLink</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   targetLabel: Multilabel [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ clone(): LabeledLink</TD></TR>
+<TR><TD ALIGN="LEFT" >+ targetLabel(): Multilabel</TD></TR>
+<TR><TD ALIGN="LEFT" >+ toSegment(next: PathNode, nextLabel: Multilabel, queryContext: NetworkQueryContext): PathSegment</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+} 
+
+subgraph cluster_2124767295 { 
+   	label=dynamic
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_563847035 { 
+   	label=label
+	labeljust=l
+	fillcolor="#d8d8d8"
+	style=filled
+   
+   Label1325061073[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Label</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ clone(): Label</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+
+Multilabel1325061073[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Multilabel</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   backwardLink: LabeledLink [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   labels: Label[] [0..*]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ getLabel(type: ECriteria): Label</TD></TR>
+<TR><TD ALIGN="LEFT" >+ paretoDominates(other: Multilabel, criteria: EnumSet&lt;ECriteria&gt;): boolean</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+} 
+
+'edges    
+AbstractPathElement1642104039 -> TerminalPathElement1642104039[arrowhead=none, arrowtail=empty, dir=both];
+Multilabel1325061073 -> Label1325061073[label="labels
+[0..*]"];
+Multilabel1325061073 -> LabeledLink640626239[label="backwardLink
+[0..1]"];
+PathSegment1642104039 -> RideSegment1642104039[arrowhead=none, arrowtail=empty, dir=both];
+PathSegment1642104039 -> WalkSegment1642104039[arrowhead=none, arrowtail=empty, dir=both];
+QuerySolution1642104039 -> AbstractPathElement1642104039[arrowhead=none];
+QuerySolution1642104039 -> Multilabel1325061073[label="finalMultilabel
+[0..1]"];
+QuerySolution1642104039 -> PathSegment1642104039[arrowhead=none];
+QuerySolution1642104039 -> SegmentPathElement1642104039[arrowhead=none];
+QuerySolution1642104039 -> WalkSegment1642104039[arrowhead=none];
+RideSegment1642104039 -> Location1363273955[label="shape
+[0..*]"];
+RideSegment1642104039 -> RouteID1363273955[label="routeID
+[0..1]"];
+SegmentPathElement1642104039 -> Location1363273955[label="shape
+[0..*]"];
+SimplifiedSolutionExtractor1412967150 -> DetailedSolutionExtractor1412967150[arrowhead=none];
+SimplifiedSolutionExtractor1412967150 -> QuerySolution1642104039[label="extractDescription() -> elements()"];
+SimplifiedSolutionExtractor1412967150 -> RouteID1363273955[label="createNode() -> routeId()"];
+TerminalPathElement1642104039 -> DetailedSolutionExtractor1412967150[arrowhead=none];
+TerminalPathElement1642104039 -> SimplifiedSolutionExtractor1412967150[arrowhead=none];
+TerminalPathElement1642104039 -> StopView1642104039[arrowhead=none, arrowtail=empty, dir=both];
+    
+}
+@enduml

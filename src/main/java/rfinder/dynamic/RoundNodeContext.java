@@ -10,12 +10,11 @@ import java.util.function.Supplier;
 public class RoundNodeContext<B extends MultilabelBag> {
 
     private final rfinder.structures.nodes.PathNode pathNode;
-
     private List<Multilabel> lastRoundList;
     private List<Multilabel> currentRoundList;
     private List<Multilabel> lastIsolatedList;
     private List<Multilabel> currentIsolatedList;
-    private B bestBag;
+    private final B bestBag;
 
 
     public RoundNodeContext(rfinder.structures.nodes.PathNode node, Supplier<B> bagSupplier){

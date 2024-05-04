@@ -1,5 +1,11 @@
 package rfinder.query.result;
 
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import rfinder.client.view.NodeSolutionExtractor;
 import rfinder.structures.common.Location;
 
 import java.time.Duration;
@@ -31,7 +37,8 @@ public class WalkSegment extends PathSegment implements PathElement{
     }
 
     @Override
-    public String toString() {
-        return "walk";
+    public Node getNodeWith(NodeSolutionExtractor extractor) {
+        return extractor.createNode(this);
     }
+
 }

@@ -1,4 +1,4 @@
-package rfinder.dynamic;
+package rfinder.dao;
 
 import rfinder.query.QueryInfo;
 

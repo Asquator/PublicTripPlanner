@@ -31,9 +31,11 @@ public class ExtractorHelper {
             // convert link element to segment with shape
             PathSegment segment = link.toSegment(currentNode, currentLabel, queryContext);
 
+            // push segment and the next node
             elements.addFirst(segment);
             elements.addFirst(previousNodeElement);
 
+            // advance one step
             currentNode = previousNode;
             currentLabel = link.targetLabel();
 

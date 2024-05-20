@@ -8,7 +8,6 @@ public class CachedFootpathFinder extends TotalCachedSourcePathFinder<PathNode, 
 
     public CachedFootpathFinder(RoutableGraph<PathNode, ShapedLink> graph, FootpathCache cache){
         super(graph, cache);
-
     }
 }
 

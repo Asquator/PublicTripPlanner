@@ -134,7 +134,7 @@ public class DefaultGraphDAO extends DBUser implements GraphDAO {
 
             // create an unordered pair representing the edge, (first, second) = (source, target)
             UnorderedPair<PathNode> edgeId = new UnorderedPair<>(linkage.source(), linkage.target());
-            EdgeData<PathNode> edgeData = edges.getOrDefault(edgeId, new EdgeData<>());
+            EdgeData<PathNode> edgeData = edges.getOrDefault(edgeId, new EdgeData<>(edgeId));
             edges.put(edgeId, edgeData);
 
             edgeData.addLinkage(linkage.source());

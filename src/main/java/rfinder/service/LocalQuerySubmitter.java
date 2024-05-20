@@ -66,22 +66,22 @@ public class LocalQuerySubmitter implements QuerySubmitter {
         DynamicContext context = new DynamicContext(new DefaultContextRetriever(), routeDAO, footpathDAO);
 
         // graph linkage info for the query
-        QueryGraphInfo graphInfo = new QueryGraphInfo(new DefaultGraphDAO(), queryInfo, linkageResolver);
+        QueryGraphInfo graphInfo = new QueryGraphInfo(new DefaultGraphDAO(), queryInfo, linkageResolver, WALK_RADIUS);
 
         // query graph
         ExtendedQueryGraph qgraph = new ExtendedQueryGraph(baseRoadGraph, graphInfo);
 
-        // path finer
+        // pathfinder
         TotalCachedSourcePathFinder<PathNode, ShapedLink> graphPathFinder =
                 new CachedFootpathFinder(qgraph, footpathCache);
 
         // footpath manager
-        QueryFootpathManager qPathFinder = new QueryFootpathManager(qgraph, graphPathFinder);
+        QueryFootpathFinder qPathFinder = new QueryFootpathFinder(qgraph, graphPathFinder);
 
         // relevant trips
         TripRepository tripRepo = tripStorage.createTripRepo(queryInfo);
 
-        context.initializeStorage(() -> new RelaxedParetoBag(queryInfo.criteria(), queryInfo.nonDominating()),
+        context.initializeStorage(() -> new RelaxedParetoBag(queryInfo.criteria(), queryInfo.dominating()),
                 new QueryContext(queryInfo, graphInfo, qPathFinder, new AllComputePolicy(), tripRepo, stopStorage));
 
         // the user decides what to do on completion

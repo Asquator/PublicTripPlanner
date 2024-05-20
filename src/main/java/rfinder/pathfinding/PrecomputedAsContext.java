@@ -8,7 +8,7 @@ import java.util.*;
 
 public class PrecomputedAsContext<T extends GraphNode> extends AsSourceContext<T> implements TotalSourcePathContext<T> {
 
-    private List<PathRecord<? extends T>> computedList = new ArrayList<>();
+    private List<PathRecord<? extends T>> computedList = null;
 
     public PrecomputedAsContext(RoutableGraph<T, ? extends RouteLink<T>> graph, T source, HeuristicEvaluator<T> heuristicEvaluator) {
         super(graph, source, heuristicEvaluator);
@@ -24,9 +24,24 @@ public class PrecomputedAsContext<T extends GraphNode> extends AsSourceContext<T
         return computedList;
     }
 
-    public synchronized void tryComputeToAll(Collection<? extends T> nodes) {
+
+    public synchronized List<PathRecord<? extends T>> tryComputeToAll(Collection<? extends T> nodes) {
+        computedList = new ArrayList<>();
+
         for (T node : nodes){
             OptionalDouble cost = pathCost(node);
+            if(cost.isPresent())
+                computedList.add(new PathRecord<>(node, cost.getAsDouble()));
+        }
+
+        return Collections.unmodifiableList(computedList);
+    }
+
+    public synchronized void tryComputeToAll(Collection<? extends T> nodes, RoutableGraph<T, ? extends RouteLink<T>> graph) {
+        computedList = new ArrayList<>();
+
+        for (T node : nodes){
+            OptionalDouble cost = pathCost(node, graph);
             if(cost.isPresent())
                 computedList.add(new PathRecord<>(node, cost.getAsDouble()));
         }

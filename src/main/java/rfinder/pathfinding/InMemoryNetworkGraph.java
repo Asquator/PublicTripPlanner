@@ -26,6 +26,6 @@ public class InMemoryNetworkGraph implements ExternalLinkableGraph<PathNode, Sha
 
     @Override
     public EdgeData<PathNode> getEdgeData(UnorderedPair<PathNode> edgeId) {
-        return edgeData.getOrDefault(edgeId, new EdgeData<>());
+        return edgeData.getOrDefault(edgeId, new EdgeData<>(edgeId));
     }
 }

@@ -40,5 +40,9 @@ public class ExtendedRoutableGraph<T extends GraphNode, L extends RouteLink<T>> 
 
         return links;
     }
+
+    public RoutableGraph<T, L> getOriginalGraph() {
+        return originalGraph;
+    }
 }
 

@@ -8,6 +8,8 @@ import rfinder.structures.graph.RoutableGraph;
 import rfinder.structures.nodes.PathNode;
 import rfinder.structures.nodes.StopNode;
 
+import java.util.Set;
+
 class TotalFootpathSourceContextFactory implements FactoryCache.FactoryFunction<PathNode, TotalSourcePathContext<PathNode>> {
     private final FootpathDAO dao;
     private final TransferDAO transferDAO;
@@ -38,9 +40,11 @@ class TotalFootpathSourceContextFactory implements FactoryCache.FactoryFunction<
         // if source is not a stop, use footpath data and compute paths to all nearby stops
         else {
             context = new PrecomputedAsContext<>(graph, source, heuristicEvaluator);
-            context.tryComputeToAll(source.getFootpathsWith(dao, freeRadius));
             context.setMaxScore(freeRadius);
+//            Set<StopNode> footpaths = source.getFootpathsWith(dao, freeRadius);
+//            context.tryComputeToAll(footpaths);
         }
+
         return context;
     }
 

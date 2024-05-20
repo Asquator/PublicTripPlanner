@@ -94,7 +94,7 @@
                         <HBox prefHeight="24.0" prefWidth="158.0">
                            <children>
                               <Separator orientation="VERTICAL" prefHeight="200.0" />
-                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="126.0" text="NONDOMINATING">
+                              <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="126.0" text="DOMINATING">
                                  <font>
                                     <Font name="Cantarell Regular" size="14.0" />
                                  </font>

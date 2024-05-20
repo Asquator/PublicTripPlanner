@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T> {
+
     private final HeuristicEvaluator<T> heuristicEvaluator; // heuristic
     private final Map<T, RoutingNode<T>> exploredSet = new ConcurrentHashMap<>();
     private final PriorityBlockingQueue<RoutingNode<T>> openSet = new PriorityBlockingQueue<>(); // set of nodes to be explored
@@ -50,7 +51,7 @@ public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T
     }
 
     @Override
-    public GraphPath<T> findPath(T destination) {
+    public GraphPath<T> findPath(T destination, RoutableGraph<T, ? extends RouteLink<T>> graph) {
         clearLock.readLock().lock();
 
         GraphPath<T> ret = null;
@@ -68,7 +69,7 @@ public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T
             last = exploredSet.getOrDefault(destination, null);
 
             if (last == null)
-                last = findFurtherPath(destination);
+                last = findFurtherPath(destination, graph);
 
             if(last != null)
                 ret = reconstructPath(last);
@@ -80,17 +81,18 @@ public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T
     }
 
     @Override
-    public OptionalDouble pathCost(T destination) {
+    public OptionalDouble pathCost(T destination, RoutableGraph<T, ? extends RouteLink<T>> graph) {
         clearLock.readLock().lock();
         // check if the path has already been found and return its score
-        RoutingNode<T> last = exploredSet.getOrDefault(destination, null);
+        exploredSet.getOrDefault(destination, null);
+        RoutingNode<T> last;
         OptionalDouble ret;
 
         // if not, continue exploring
         synchronized (this) {
             last = exploredSet.getOrDefault(destination, null);
             if (last == null)
-                last = findFurtherPath(destination);
+                last = findFurtherPath(destination, graph);
 
             if(last != null)
                 ret = OptionalDouble.of(last.getRouteScore());
@@ -104,6 +106,15 @@ public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T
         return ret;
     }
 
+    @Override
+    public GraphPath<T> findPath(T destination) {
+        return findPath(destination, this.graph);
+    }
+
+    @Override
+    public OptionalDouble pathCost(T destination) {
+        return pathCost(destination, this.graph);
+    }
 
 
     /**
@@ -116,7 +127,7 @@ public class AsSourceContext<T extends GraphNode> implements SourcePathContext<T
     /*
       Necessary condition: clearLock is held by one of the calling functions
      */
-    private RoutingNode<T> findFurtherPath(T destination) {
+    private RoutingNode<T> findFurtherPath(T destination, RoutableGraph<T, ? extends RouteLink<T>> graph) {
 
         while (!openSet.isEmpty()) {
 

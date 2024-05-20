@@ -4,7 +4,7 @@ import rfinder.dao.ContextRetriever;
 import rfinder.dao.FootpathDAO;
 import rfinder.dao.RouteDAO;
 import rfinder.dynamic.label.*;
-import rfinder.pathfinding.QueryFootpathManager;
+import rfinder.pathfinding.QueryFootpathFinder;
 import rfinder.query.QueryContext;
 import rfinder.query.QueryGraphInfo;
 import rfinder.query.QueryInfo;
@@ -36,7 +36,7 @@ public class DynamicContext {
     // round contexts storage
     private final Map<PathNode, RoundNodeContext<?>> labelRepo = new HashMap<>();
     private QueryContext queryContext;
-    private QueryFootpathManager pathFinder;
+    private QueryFootpathFinder pathFinder;
     private final RouteDAO routeDAO;
     private final FootpathDAO footPathRepo;
     private final ContextRetriever contextRetriever;
@@ -277,6 +277,8 @@ public class DynamicContext {
     public NetworkQueryContext compute(){
         RouteScanner scanner;
 
+        tryDirectCast();
+
         // process footpaths from source
         processFootpathsFrom(queryContext.queryGraphInfo().sourceRepr());
         MultilabelBag finalBag;
@@ -307,6 +309,29 @@ public class DynamicContext {
         // get final bag
         finalBag = labelRepo.get(queryContext.queryGraphInfo().destinationRepr()).getBestBag();
         return new NetworkQueryContext(queryContext, routeDAO, finalBag);
+    }
+
+
+    private void tryDirectCast() {
+        PathNode source = queryContext.queryGraphInfo().sourceRepr();
+        OptionalDouble pathCost = pathFinder.directPathCost();
+
+        if(pathCost.isEmpty())
+            return;
+
+        for(Multilabel multilabel : labelRepo.get(queryContext.queryGraphInfo().sourceRepr()).getCurrentRoundList()){
+
+            // backward link to source node
+            Multilabel cloned = new Multilabel(multilabel);
+            WalkLink backwardLink = new WalkLink(source, multilabel);
+
+            // update arrival time and walking distance
+            queryContext.prunePolicy().updateFootpaths(cloned, pathCost.getAsDouble());
+
+            cloned.setBackwardLink(backwardLink);
+            labelRepo.get(queryContext.queryGraphInfo().destinationRepr()).addToCurrentIsolatedBag(cloned);
+        }
+
     }
 
 
@@ -344,7 +369,6 @@ public class DynamicContext {
             // for each multilabel which is not an isolated label (by checking if the backward link is a walk link)
             sourceStop.getBestBag().stream().filter(multilabel -> !(multilabel.getBackwardLink() instanceof WalkLink)).forEach((
                     multilabel -> {
-
                         // make copy of the label
                         Multilabel cloned = new Multilabel(multilabel);
                         cloned.setBackwardLink(new WalkLink(stop.target(), multilabel));
@@ -359,6 +383,7 @@ public class DynamicContext {
 
         });
     }
+
 
     // convenience method to process footpaths
     private void processForwardFootpaths(){
@@ -390,6 +415,7 @@ public class DynamicContext {
 
                 improved = targetStop.addToCurrentIsolatedBag(cloned) || improved;
             }
+
             if(improved)
                 markedIsolatedStops.add((StopNode) stop.target());
         });

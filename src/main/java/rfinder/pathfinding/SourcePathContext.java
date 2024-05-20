@@ -10,4 +10,8 @@ public interface SourcePathContext<T extends GraphNode> {
     GraphPath<T> findPath(T destination);
 
     OptionalDouble pathCost(T destination);
+
+    GraphPath<T> findPath(T destination, RoutableGraph<T, ? extends RouteLink<T>> graph);
+
+    OptionalDouble pathCost(T destination, RoutableGraph<T, ? extends RouteLink<T>> graph);
  }

@@ -64,7 +64,7 @@ public class DetailedSolutionExtractor implements NodeSolutionExtractor{
 
     public Node createNode(StopView stopView){
         HBox hbox = new HBox();
-        Label label, labelSegment;
+        Label label;
 
         hbox.getChildren().add(new ImageView(TERMINAL_POINT_IMG));
         label = new Label(stopView.getName() + " | " + stopView.getStopId());

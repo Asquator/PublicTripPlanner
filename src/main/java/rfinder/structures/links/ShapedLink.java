@@ -10,7 +10,6 @@ public class ShapedLink extends RouteLink<PathNode> {
 
     private final List<Location> shape;
 
-
     public ShapedLink(PathNode destination, double weight, List<Location> shape) {
         super(destination, weight);
         this.shape = shape;
@@ -18,5 +17,9 @@ public class ShapedLink extends RouteLink<PathNode> {
 
     public List<Location> getShape() {
         return shape;
+    }
+
+    public ShapedLink reversed(PathNode source){
+        return new ShapedLink(source, weight(), shape.reversed());
     }
 }

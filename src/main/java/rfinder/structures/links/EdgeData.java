@@ -12,6 +12,11 @@ public class EdgeData<T extends GraphNode<?>> {
 
     Set<T> linkedNodes = new HashSet<>();
 
+    private final Object edgeId;
+
+    public EdgeData(Object edgeId) {
+        this.edgeId = edgeId;
+    }
 
     public void addLinkage(T pathNode) {
         linkedNodes.add(pathNode);
@@ -26,4 +31,15 @@ public class EdgeData<T extends GraphNode<?>> {
         return linkedNodes.iterator();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof EdgeData<?> edgeData)) return false;
+        return Objects.equals(edgeId, edgeData.edgeId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(edgeId);
+    }
 }

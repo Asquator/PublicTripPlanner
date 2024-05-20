@@ -12,4 +12,7 @@ import java.util.OptionalDouble;
 
 public interface GraphPathFinder<T extends GraphNode, L extends RouteLink<T>> {
     GraphPath<T> findPath(T source, T destination);
+    OptionalDouble pathCost(T source, T destination);
+    GraphPath<T> findPath(T source, T destination, RoutableGraph<T, L> graph);
+    OptionalDouble pathCost(T source, T destination, RoutableGraph<T, L> graph);
 }

@@ -13,10 +13,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-public class ExtendedQueryGraph extends ExtendedRoutableGraph<PathNode, ShapedLink> {
+public class ExtendedQueryGraph extends ExtendedRoutableGraph<PathNode, ShapedLink> implements ExternalLinkableGraph<PathNode, ShapedLink> {
+
+    private final QueryGraphInfo queryGraphInfo;
+
+    private final EdgeData<PathNode> sourceEdge;
+    private final EdgeData<PathNode> destEdge;
 
     public ExtendedQueryGraph(ExternalLinkableGraph<PathNode, ShapedLink> originalGraph, QueryGraphInfo queryGraphInfo) {
         super(originalGraph);
+
+        this.queryGraphInfo = queryGraphInfo;
 
         final EdgeLinkage sourceLinkage = queryGraphInfo.sourceLinkage();
         final EdgeLinkage destLinkage = queryGraphInfo.destinationLinkage();
@@ -28,8 +35,8 @@ public class ExtendedQueryGraph extends ExtendedRoutableGraph<PathNode, ShapedLi
         final PathNode destRepr = destLinkage.closest();
 
         // retrieve the two edges
-        EdgeData<PathNode> sourceEdge = originalGraph.getEdgeData(new UnorderedPair<>(sourceLinkage.source(), sourceLinkage.target()));
-        EdgeData<PathNode> destEdge = originalGraph.getEdgeData(new UnorderedPair<>(destLinkage.source(), destLinkage.target()));
+        sourceEdge = originalGraph.getEdgeData(new UnorderedPair<>(sourceLinkage.source(), sourceLinkage.target()));
+        destEdge = originalGraph.getEdgeData(new UnorderedPair<>(destLinkage.source(), destLinkage.target()));
 
         // ensure that edge points are linked
         sourceEdge.addLinkage(sourceLinkage.source());
@@ -37,6 +44,7 @@ public class ExtendedQueryGraph extends ExtendedRoutableGraph<PathNode, ShapedLi
 
         destEdge.addLinkage(destLinkage.source());
         destEdge.addLinkage(destLinkage.target());
+
 
         // link source to every node linked to this edge
         sourceEdge.linkIterator().forEachRemaining(node -> {
@@ -50,6 +58,15 @@ public class ExtendedQueryGraph extends ExtendedRoutableGraph<PathNode, ShapedLi
             addLink(destRepr, new ShapedLink(node, edgeCut.km(), edgeCut.shape()));
         });
 
+        if(sourceEdge.equals(destEdge)) {
+            EdgeCut edgeCut = dao.getEdgeCut(sourceLinkage.source(), sourceLinkage.target(), sourceRepr.getLocation(), destRepr.getLocation());
+            addLink(sourceRepr, new ShapedLink(destRepr, edgeCut.km(), edgeCut.shape()));
+            addLink(destRepr, new ShapedLink(sourceRepr, edgeCut.km(), edgeCut.shape().reversed()));
+        }
+    }
+
+    public QueryGraphInfo getQueryGraphInfo() {
+        return queryGraphInfo;
     }
 
     /**
@@ -82,4 +99,16 @@ public class ExtendedQueryGraph extends ExtendedRoutableGraph<PathNode, ShapedLi
                 .orElse(null);
     }
 
+    @Override
+    public EdgeData<PathNode> getEdgeData(UnorderedPair<PathNode> edgeId) {
+        return ((ExternalLinkableGraph<PathNode, ?>) getOriginalGraph()).getEdgeData(edgeId);
+    }
+
+    public EdgeData<PathNode> getSourceEdge() {
+        return sourceEdge;
+    }
+
+    public EdgeData<PathNode> getDestEdge() {
+        return destEdge;
+    }
 }
